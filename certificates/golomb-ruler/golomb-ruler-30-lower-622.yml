@@ -7,6 +7,7 @@ lean:
   theorem: LeapsInBounds.Proofs.GolombWindowFive.lower_30
 submitted_by: bargainlandz-code
 date: '2026-11-15'
-notes: Self-contained five-window and endpoint-distance lower bound. Formal proof
-  developed with AI assistance from a human-directed research programme; locally kernel-checked
-  against Lean 4.35.0 and the official checker.
+notes: Self-contained five-window and endpoint-distance lower bound.
+  Research contributor - Sami Hani Badaoui (GitHub bargainlandz-code).
+  Formal proof developed with AI assistance from a human-directed research programme;
+  contributor-provided logs report Lean 4.35.0 kernel checks, pending independent maintainer review.
