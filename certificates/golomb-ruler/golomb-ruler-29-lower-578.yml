@@ -1,0 +1,12 @@
+constant: golomb-ruler-29
+bound: lower
+value: 578
+kind: lean
+lean:
+  module: LeapsInBounds.Proofs.GolombWindowFive
+  theorem: LeapsInBounds.Proofs.GolombWindowFive.lower_29
+submitted_by: bargainlandz-code
+date: '2026-11-15'
+notes: Self-contained five-window and endpoint-distance lower bound. Formal proof
+  developed with AI assistance from a human-directed research programme; locally kernel-checked
+  against Lean 4.35.0 and the official checker.
