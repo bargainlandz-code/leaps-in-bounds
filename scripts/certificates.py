@@ -862,6 +862,9 @@ def cage_lean_statement(params: Mapping[str, int], bound: str, value: int) -> tu
 def cage_check_witness(params: Mapping[str, int], bound: str, value: int, cert: Mapping[str, Any]) -> None:
     """n(k,g) <= value is witnessed by a k-regular graph of girth g on value
     vertices."""
+    if cert["witness"].get("format") == "metacyclic":
+        degree_diameter_check_metacyclic(params, value, read_witness_data(cert))
+        return
     adj = read_graph(cert)
     if len(adj) != value:
         raise CertificateError(f"Graph has {len(adj)} vertices, but n(k,g) <= {value} needs {value}")
@@ -874,6 +877,67 @@ def cage_check_witness(params: Mapping[str, int], bound: str, value: int, cert: 
 def degree_diameter_lean_statement(params: Mapping[str, int], bound: str, value: int) -> tuple[str, list[int]]:
     name = "LowerBound" if bound == "lower" else "UpperBound"
     return f"LeapsInBounds.DegreeDiameter.{name}", [params['d'], params['k'], value]
+
+
+def degree_diameter_check_metacyclic(params: Mapping[str, int], value: int, text: str) -> None:
+    """Check a compact Cayley graph of Z_m ⋊_r Z_n by BFS from its identity.
+
+    Right multiplication by an inverse-closed set defines an undirected graph.
+    Left multiplication is an automorphism, so checking all vertices from the
+    identity proves the diameter bound for *every* pair of vertices.
+    """
+    try:
+        witness = json.loads(text)
+    except (ValueError, TypeError) as exc:
+        raise CertificateError(f"Invalid metacyclic witness JSON: {exc}") from exc
+    if not isinstance(witness, dict) or set(witness) != {"m", "n", "r", "generators"}:
+        raise CertificateError("Metacyclic witness needs m, n, r, generators")
+    m, n, r, raw_gens = (witness[key] for key in ("m", "n", "r", "generators"))
+    if any(type(x) is not int for x in (m, n, r)) or m < 2 or n < 1 or not 0 <= r < m:
+        raise CertificateError("Invalid group parameters in metacyclic witness")
+    if m * n != value or pow(r, n, m) != 1 or math.gcd(r, m) != 1:
+        raise CertificateError("Metacyclic group is not valid or has incorrect order")
+    if not isinstance(raw_gens, list) or not 1 <= len(raw_gens) <= params["d"]:
+        raise CertificateError("Too many or too few generators")
+    if any(not isinstance(g, list) or len(g) != 2
+           or any(type(t) is not int for t in g) for g in raw_gens):
+        raise CertificateError("Generators must be pairs of integers")
+    gens = [tuple(g) for g in raw_gens]
+    if any(not (0 <= a < m and 0 <= b < n) for a, b in gens):
+        raise CertificateError("Generator coordinates outside group")
+    if len(set(gens)) != len(gens) or (0, 0) in gens:
+        raise CertificateError("Generators must be distinct and nonidentity")
+    powers = [1] * n
+    for b in range(1, n):
+        powers[b] = powers[b - 1] * r % m
+    gens_set = set(gens)
+    if any(((-a * pow(powers[b], -1, m)) % m, (-b) % n) not in gens_set
+           for a, b in gens):
+        raise CertificateError("Generators are not inverse-closed")
+    seen = bytearray(value)
+    seen[0] = 1
+    queue = [0]
+    head = 0
+    for _ in range(params["k"]):
+        end = len(queue)
+        while head < end:
+            z = queue[head]
+            head += 1
+            a, b = z % m, z // m
+            pb = powers[b]
+            for x, y in gens:
+                u = ((b + y) % n) * m + ((a + pb * x) % m)
+                if not seen[u]:
+                    seen[u] = 1
+                    queue.append(u)
+        if len(queue) == value:
+            return
+        if len(queue) == end:
+            break
+    raise CertificateError(
+        f"Not all {value} vertices are within {params['k']} steps "
+        f"from the identity ({len(queue)} reached)"
+    )
 
 
 def degree_diameter_check_witness(params: Mapping[str, int], bound: str, value: int, cert: Mapping[str, Any]) -> None:
