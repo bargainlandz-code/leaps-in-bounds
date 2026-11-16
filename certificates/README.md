@@ -177,6 +177,20 @@ Formal statements are in [`formal/LeapsInBounds/Statements/DegreeDiameter.lean`]
 
 Witnesses can certify lower bounds only. A witness for `N(d,k) >= n` is a graph on `n` vertices with maximum degree at most `d` and diameter at most `k`.
 
+For large Cayley graphs of a metacyclic group, a compact `format: metacyclic`
+witness is also accepted. Its `data` is a JSON object with integer parameters
+`m`, `n`, `r` and a list of two-integer `generators`, for example:
+`{"m":4263,"n":84,"r":32,"generators":[[588,42],...]}` (illustrative).
+The group is Z_m semidirect_r Z_n, with multiplication
+`(a,b)*(x,y) = ((a+r^b*x) % m, (b+y) % n)`.
+The checker verifies the action (`gcd(r,m)=1`, `r^n = 1 mod m`), vertex count
+`m*n`, and distinct, nonidentity, inverse-closed generators (at most `d`).
+It runs exact breadth-first search to depth `k` from the identity. Left
+translation is an automorphism of a right Cayley graph, so coverage from
+the identity certifies the diameter for every vertex pair. This avoids
+storing millions of explicit edges when sparse6 exceeds the 500 kB limit.
+
+
 ### Minimal superpermutations: `minimal-superpermutation-{n}`
 
 Formal statements are in [`formal/LeapsInBounds/Statements/Superpermutation.lean`](../formal/LeapsInBounds/Statements/Superpermutation.lean):
