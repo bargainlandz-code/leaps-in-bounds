@@ -106,14 +106,14 @@ degree-diameter:
     wikidata: Q5251835
     wikipedia_en: Degree_diameter_problem
   display_type: grid
-  display_rows: [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+  display_rows: [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22]
   display_columns: [2, 3, 4, 5, 6, 7, 8, 9, 10]
   representative_image: degree-diameter-3-2
   id_template: "degree-diameter-{d}-{k}"
   name_template: "Degree-diameter problem $N({d},{k})$"
   description_template: "The largest possible number of vertices in a graph of maximum degree ${d}$ and diameter at most ${k}$."
   parameters: [d, k]
-  parameter_values: [[[3, 20], [2, 10]]]
+  parameter_values: [[[3, 20], [2, 10]], [[21, 22], [5, 5]]]
   added_by: daniel-munro
 
 cage:
