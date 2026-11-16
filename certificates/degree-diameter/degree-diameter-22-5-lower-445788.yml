@@ -1,0 +1,19 @@
+constant: degree-diameter-22-5
+bound: lower
+value: 445788
+kind: witness
+witness:
+  format: metacyclic
+  data: '{"m":5307,"n":84,"r":32,"generators":[[4911,42],[4167,42],[2489,45],[4280,39],[382,25],[3751,59],[267,32],[2640,52],[1102,26],[4031,58],[845,43],[5057,41],[3827,14],[2725,70],[2442,69],[3150,15],[3608,71],[932,13],[2851,48],[1358,36],[3498,47],[3537,37]]}'
+submitted_by: bargainlandz-code
+date: '2026-11-16'
+notes: >-
+  Cayley graph of Z_5307 semidirect_32 Z_84. Its 22 inverse-closed
+  generators were obtained through AI-assisted iterative generator replacement
+  and radius-five miss minimisation, with research by Sami Hani Badaoui and
+  Sarah Ellen Mary Vaughan (original construction archived 2026-10-05).
+  The checker validates the semidirect-product action, group order,
+  inverse-closed distinct nonidentity generators and complete radius-five
+  coverage from the identity. Left translations establish the diameter
+  bound for every vertex pair. Independently reproduced with Python and
+  C++ BFS. Identity-root distance histogram: [1, 22, 462, 9644, 161392, 274267].
