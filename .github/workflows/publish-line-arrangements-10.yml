@@ -1,0 +1,41 @@
+name: Build certified 1,000,001 ten-line witness
+
+on:
+  push:
+    branches:
+      - claim-10-line-arrangements-1000001-20261118
+    paths:
+      - .github/workflows/publish-line-arrangements-10.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-verify-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile independent programs
+        run: |
+          g++ -O3 -std=c++17 research/line-arrangements-10/generate_stream.cpp -o /tmp/generate_lines
+          g++ -O3 -std=c++17 research/line-arrangements-10/independent_vertex_audit.cpp -o /tmp/audit_lines
+      - name: Generate and verify all one million witnesses
+        shell: bash
+        run: |
+          set -euo pipefail
+          /tmp/generate_lines 1000001 > research/line-arrangements-10/lines-1000001.txt
+          printf '41f887098b9f9dc2c4d84d4c512738649fa3c940fa4880173a6e99b47869bf64  research/line-arrangements-10/lines-1000001.txt\n' | sha256sum -c -
+          /tmp/audit_lines < research/line-arrangements-10/lines-1000001.txt | tee research/line-arrangements-10/audit-result.txt
+          xz -6 -T2 -c research/line-arrangements-10/lines-1000001.txt > research/line-arrangements-10/lines-1000001.txt.xz
+          sha256sum research/line-arrangements-10/lines-1000001.txt.xz | tee research/line-arrangements-10/witness-sha256.txt
+          rm research/line-arrangements-10/lines-1000001.txt
+      - name: Commit compressed witness (full 1,000,001 arrangements)
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add research/line-arrangements-10/lines-1000001.txt.xz research/line-arrangements-10/witness-sha256.txt research/line-arrangements-10/audit-result.txt
+          git commit -m "Publish verified 1000001 ten-line witness, exact audit and SHA256"
+          git push origin HEAD:claim-10-line-arrangements-1000001-20261118
