@@ -3,20 +3,16 @@ bound: lower
 value: 167680
 kind: witness
 witness:
-  format: hamming4line
-  file: n17_167680.h4l
+  format: hamming-lines
+  file: degree-diameter-17-5-lower-167680.h4l
 submitted_by: bargainlandz-code
 date: 2026-11-16
 notes: >-
-  Sami Hani Badaoui and Sarah Ellen Mary Vaughan extend Dharunish
-  Yugeswardeenoo's degree-16 diameter-5 graph of order 159744 by
-  adding 7936 false-twin vertices selected with disjoint original
-  neighbourhoods, obtaining maximum degree 17 and diameter five.
-  The new graph is reconstructed from 624 Hamming H(4,4) fibres,
-  159744 four-vertex line partners forming 79872 K4,4 subgraphs,
-  and a list of 7936 clone sources. The line-partner involution,
-  degree bound and graph diameter are checked from scratch by the
-  C++17 verifier; a complete BFS runs from every vertex.
-  The original construction was found through AI-assisted computational
-  exploration and independently checked with both source reconstruction
-  and exhaustive BFS. No prior journal publication is claimed.
+  Sami Hani Badaoui and Sarah Ellen Mary Vaughan extended Dharunish
+  Yugeswardeenoo's graph of degree 16 and diameter 5 on 159744 vertices
+  (November 2026) by adding a false twin, joined to the same neighbors, for
+  each of 7936 vertices whose neighborhoods are disjoint, so no degree rises
+  above 17 and the diameter stays 5. The base graph is written as 624 copies
+  of the Hamming graph H(4,4), with each line of four vertices joined
+  completely to a partner line in another copy. The construction was found
+  with AI-assisted computational exploration.

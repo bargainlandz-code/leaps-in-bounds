@@ -63,8 +63,8 @@ combi-wiki-degree-diameter:
   added_by: daniel-munro
 
 comellas-degree-diameter-table:
-  string: "Comellas, F. The (Degree, Diameter) Problem for Graphs (records table), last changed November 2, 2026"
-  date: "2026-11-02"
+  string: "Comellas, F. The (Degree, Diameter) Problem for Graphs (records table), last changed November 16, 2026"
+  date: "2026-11-16"
   url: "https://web.mat.upc.edu/francesc.comellas/delta-d/table_degree_diameter.html"
   added_by: daniel-munro
 
@@ -1216,6 +1216,11 @@ rajiv-2026-10:
   string: "Rajiv, R. (2026). New lower bounds for the degree-diameter problem from Cayley graphs of metacyclic groups, slack filling and chart lifts. Zenodo."
   date: "2026-10-30"
   doi: "https://doi.org/10.5281/zenodo.23788455"
+  added_by: daniel-munro
+
+yugeswardeenoo-2026-11:
+  string: "Dharunish Yugeswardeenoo in November 2026"
+  date: "2026-11-12"
   added_by: daniel-munro
 
 # de Bruijn-Newman

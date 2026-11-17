@@ -708,39 +708,126 @@ def girth(adj: list[int]) -> float:
     return best
 
 
-def eccentricity_at_most(adj: list[int], source: int, k: int) -> bool:
-    """Check whether every vertex is within distance k of source."""
-    full = (1 << len(adj)) - 1
-    reached = layer = 1 << source
-    for _ in range(k):
-        if reached == full:
-            break
-        new = 0
-        for v in bits(layer):
-            new |= adj[v]
-        layer = new & ~reached
-        reached |= new
-    return reached == full
+def edge_arrays(adj: list[int]) -> tuple[np.ndarray, np.ndarray]:
+    """The edges of a graph given by adjacency bitsets, as arrays of ends."""
+    edges = [(u, v) for u in range(len(adj)) for v in bits(adj[u]) if u < v]
+    ends = np.array(edges, dtype=np.int64).reshape(-1, 2)
+    return ends[:, 0], ends[:, 1]
 
 
-def read_witness_data(cert: Mapping[str, Any]) -> str:
-    """The witness as text: inline data, or a file here, decompressed if it
-    ends in .gz or .xz."""
+def check_simple(n: int, u: np.ndarray, v: np.ndarray) -> None:
+    """Check that edges given by arrays of ends form a simple graph on n vertices."""
+    if len(u) and (min(u.min(), v.min()) < 0 or max(u.max(), v.max()) >= n):
+        raise CertificateError("Graph has an edge with an end that isn't a vertex")
+    if np.any(u == v):
+        raise CertificateError("Graph has a loop")
+    keys = np.minimum(u, v) * n + np.maximum(u, v)
+    if len(np.unique(keys)) != len(keys):
+        raise CertificateError("Graph has a repeated edge")
+
+
+def diameter_at_most(n: int, u: np.ndarray, v: np.ndarray, k: int) -> bool:
+    """Check whether every two vertices of a graph, given by arrays of edge
+    ends, are within distance k. Runs a breadth-first search from 512 vertices
+    at a time, as bits of a word per vertex."""
+    if n <= 1:
+        return True
+    ends = np.concatenate([u, v])
+    degrees = np.bincount(ends, minlength=n)
+    if not degrees.all():
+        return False
+    neighbors = np.concatenate([v, u])[np.argsort(ends, kind="stable")]
+    starts = np.concatenate([[0], np.cumsum(degrees)[:-1]])
+    words = 8
+    batch = 64 * words
+    for first in range(0, n, batch):
+        roots = np.arange(first, min(first + batch, n))
+        positions = roots - first
+        reached = np.zeros((n, words), dtype=np.uint64)
+        reached[roots, positions // 64] = np.left_shift(np.uint64(1), (positions % 64).astype(np.uint64))
+        for _ in range(k):
+            reached |= np.bitwise_or.reduceat(reached[neighbors], starts, axis=0)
+        # Bits of the roots in this batch, which every vertex must have reached
+        expected = np.zeros(batch, dtype=np.uint8)
+        expected[:len(roots)] = 1
+        expected = np.packbits(expected, bitorder="little").view(np.uint64)
+        if np.any((reached & expected) != expected):
+            return False
+    return True
+
+
+# Lines of the Hamming graph H(4,4), with vertices (x0, x1, x2, x3) numbered
+# x0 + 4 x1 + 16 x2 + 64 x3: line 64 a + i varies coordinate a over 0 to 3,
+# with the other coordinates, in increasing order, the base-4 digits of i.
+HAMMING_LINES = np.array([
+    [sum(((i >> 2 * j) & 3) << 2 * c for j, c in enumerate(c for c in range(4) if c != a)) + (t << 2 * a)
+     for t in range(4)]
+    for a in range(4) for i in range(64)
+], dtype=np.int64)
+HAMMING_LINES_MAGIC = b"H4LINE01"
+
+
+def decode_hamming_lines(data: bytes) -> tuple[int, np.ndarray, np.ndarray]:
+    """Decode a graph in hamming-lines format (see certificates/README.md),
+    returning its number of vertices and arrays of edge ends."""
+    if len(data) < 16 or data[:8] != HAMMING_LINES_MAGIC:
+        raise CertificateError(f"hamming-lines witness must start with {HAMMING_LINES_MAGIC.decode()}")
+    fibers = int.from_bytes(data[8:12], "little")
+    clones = int.from_bytes(data[12:16], "little")
+    lines = 256 * fibers
+    if not 1 <= fibers <= 4096 or clones > lines:
+        raise CertificateError(f"hamming-lines witness has {fibers} fibers and {clones} clones")
+    width = (lines - 1).bit_length()
+    count = lines + clones
+    if len(data) != 16 + (count * width + 7) // 8:
+        raise CertificateError(f"hamming-lines witness should have {16 + (count * width + 7) // 8} bytes, not {len(data)}")
+    stream = np.unpackbits(np.frombuffer(data, dtype=np.uint8, offset=16), bitorder="little")
+    if stream[count * width:].any():
+        raise CertificateError("hamming-lines witness has padding bits that aren't 0")
+    values = stream[:count * width].reshape(count, width).astype(np.int64) @ (np.int64(1) << np.arange(width))
+    partners, sources = values[:lines], values[lines:]
+    ids = np.arange(lines)
+    if np.any(partners >= lines) or np.any(partners[np.minimum(partners, lines - 1)] != ids):
+        raise CertificateError("hamming-lines partners must pair up the lines")
+    if np.any(sources >= lines):
+        raise CertificateError("hamming-lines clone source isn't a vertex of the base graph")
+    vertices = 256 * (ids // 256)[:, None] + HAMMING_LINES[ids % 256]
+    first = ids[ids < partners]
+    u = np.repeat(vertices[first], 4, axis=1).ravel()
+    v = np.tile(vertices[partners[first]], 4).ravel()
+    # Each clone is joined to the neighbors of its source in the base graph
+    base_degrees = np.bincount(np.concatenate([u, v]), minlength=lines)
+    order = np.argsort(np.concatenate([u, v]), kind="stable")
+    base_neighbors = np.concatenate([v, u])[order]
+    base_starts = np.concatenate([[0], np.cumsum(base_degrees)])
+    clone_u = np.repeat(lines + np.arange(clones), base_degrees[sources])
+    clone_v = np.concatenate([base_neighbors[base_starts[s]:base_starts[s + 1]] for s in sources] or [np.zeros(0, np.int64)])
+    return count, np.concatenate([u, clone_u]), np.concatenate([v, clone_v])
+
+
+def read_witness_file(cert: Mapping[str, Any]) -> bytes:
+    """The bytes of a witness file here, decompressed if it ends in .gz or .xz."""
     witness = cert["witness"]
-    if "data" in witness:
-        return witness["data"]
     if "file" in witness:
         path = pathlib.Path(cert["path"]).parent / witness["file"]
         data = path.read_bytes()
         if path.suffix in COMPRESSED_SUFFIXES:
             data = decompress(data, path.suffix, f"{cert['id']}: {path}")
-        try:
-            return data.decode("ascii")
-        except UnicodeDecodeError:
-            raise CertificateError(f"{cert['id']}: witness file {path} isn't ASCII text")
+        return data
     if "url" in witness:
         raise CertificateError(f"{cert['id']}: the witness is only linked, at {witness['url']}, so it can't be checked here")
-    raise CertificateError(f"{cert['id']}: witness needs 'data', 'file' or 'url'")
+    raise CertificateError(f"{cert['id']}: witness needs 'file' or 'url'")
+
+
+def read_witness_data(cert: Mapping[str, Any]) -> str:
+    """The witness as text: inline data, or a file here, decompressed if it
+    ends in .gz or .xz."""
+    if "data" in cert["witness"]:
+        return cert["witness"]["data"]
+    try:
+        return read_witness_file(cert).decode("ascii")
+    except UnicodeDecodeError:
+        raise CertificateError(f"{cert['id']}: witness file {cert['witness']['file']} isn't ASCII text")
 
 
 def decompress(data: bytes, suffix: str, name: str) -> bytes:
@@ -879,20 +966,18 @@ def degree_diameter_lean_statement(params: Mapping[str, int], bound: str, value:
 def degree_diameter_check_witness(params: Mapping[str, int], bound: str, value: int, cert: Mapping[str, Any]) -> None:
     """N(d,k) >= value is witnessed by a graph on value vertices with maximum
     degree at most d and diameter at most k."""
-    # Independently reconstruct and check compact Hamming-line graph witnesses.
-    if cert["witness"].get("format") == "hamming4line":
-        from degree_diameter_hamming4line import check_hamming4line
-        try:
-            check_hamming4line(params, value, cert)
-        except (OSError, ValueError, subprocess.SubprocessError) as exc:
-            raise CertificateError(str(exc)) from exc
-        return
-    adj = read_graph(cert)
-    if len(adj) != value:
-        raise CertificateError(f"Graph has {len(adj)} vertices, but N(d,k) >= {value} needs {value}")
-    if any(neighbors.bit_count() > params["d"] for neighbors in adj):
+    if cert["witness"].get("format") == "hamming-lines":
+        n, u, v = decode_hamming_lines(read_witness_file(cert))
+        check_simple(n, u, v)
+    else:
+        adj = read_graph(cert)
+        n = len(adj)
+        u, v = edge_arrays(adj)
+    if n != value:
+        raise CertificateError(f"Graph has {n} vertices, but N(d,k) >= {value} needs {value}")
+    if np.bincount(np.concatenate([u, v]), minlength=n).max(initial=0) > params["d"]:
         raise CertificateError(f"Graph has a vertex of degree more than {params['d']}")
-    if not all(eccentricity_at_most(adj, v, params["k"]) for v in range(len(adj))):
+    if not diameter_at_most(n, u, v, params["k"]):
         raise CertificateError(f"Graph has diameter more than {params['k']}")
 
 
