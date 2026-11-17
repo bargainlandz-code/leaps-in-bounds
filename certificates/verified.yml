@@ -3297,6 +3297,11 @@ degree-diameter-17-4-upper-74274:
   checker: 5af057d28c18484643637ed3cb84d61047407389
   verified_by: daniel-munro
   date: '2026-11-11'
+degree-diameter-17-5-lower-167680:
+  sha256: f8f1fb6724b6975a08919d5402c4fc13d8e9f26a2669fa537197cde7f9aa11bd
+  checker: 3a589d725cbe22015f942b80bad617ea5feddf38
+  verified_by: daniel-munro
+  date: '2026-11-16'
 degree-diameter-17-5-lower-4000:
   sha256: f3be879178c34fdb497bcef1a4689797b844bef3ae537174fe4cd2dce9a0d4d3
   checker: 5af057d28c18484643637ed3cb84d61047407389

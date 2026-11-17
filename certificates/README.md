@@ -177,6 +177,14 @@ Formal statements are in [`formal/LeapsInBounds/Statements/DegreeDiameter.lean`]
 
 Witnesses can certify lower bounds only. A witness for `N(d,k) >= n` is a graph on `n` vertices with maximum degree at most `d` and diameter at most `k`.
 
+Graphs too large for sparse6 within the [size limit](#size-limit) can use `format: hamming-lines` if they have this structure. It's a binary file, by convention with the extension `.h4l`:
+
+- The base graph has `F` fibers, each with 256 vertices `(x0, x1, x2, x3)`, coordinates from 0 to 3, so vertex `256 f + x0 + 4 x1 + 16 x2 + 64 x3`. Each fiber has 256 lines of 4 vertices: line `256 f + 64 a + i` varies coordinate `a` and fixes the other three, in increasing order, to the base-4 digits of `i`, least significant first. Each line has a partner line, the partners pairing up all `256 F` lines, and each line is joined completely to its partner (a `K_{4,4}`). There are no other edges.
+- Then `C` clones are added as vertices `256 F` onwards, each joined to the neighbors of its source vertex in the base graph.
+- The file is the 8 bytes `H4LINE01`, then `F` and `C` as 4-byte unsigned little-endian integers, then the partner of each line in order and the source of each clone, each as a `b`-bit number, where `b` is the number of bits in `256 F - 1`. These are written as one stream of bits, each number least significant bit first, packed into bytes from their least significant bit, with the last byte padded with 0 bits.
+
+The checker reconstructs the graph and checks that it's simple, as well as its degrees and diameter.
+
 ### Minimal superpermutations: `minimal-superpermutation-{n}`
 
 Formal statements are in [`formal/LeapsInBounds/Statements/Superpermutation.lean`](../formal/LeapsInBounds/Statements/Superpermutation.lean):
