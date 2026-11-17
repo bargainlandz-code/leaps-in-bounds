@@ -879,6 +879,14 @@ def degree_diameter_lean_statement(params: Mapping[str, int], bound: str, value:
 def degree_diameter_check_witness(params: Mapping[str, int], bound: str, value: int, cert: Mapping[str, Any]) -> None:
     """N(d,k) >= value is witnessed by a graph on value vertices with maximum
     degree at most d and diameter at most k."""
+    # Independently reconstruct and check compact Hamming-line graph witnesses.
+    if cert["witness"].get("format") == "hamming4line":
+        from degree_diameter_hamming4line import check_hamming4line
+        try:
+            check_hamming4line(params, value, cert)
+        except (OSError, ValueError, subprocess.SubprocessError) as exc:
+            raise CertificateError(str(exc)) from exc
+        return
     adj = read_graph(cert)
     if len(adj) != value:
         raise CertificateError(f"Graph has {len(adj)} vertices, but N(d,k) >= {value} needs {value}")
