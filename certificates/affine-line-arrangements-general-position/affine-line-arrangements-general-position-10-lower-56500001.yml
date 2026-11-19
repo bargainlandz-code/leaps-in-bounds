@@ -11,7 +11,7 @@ submitted_by: bargainlandz-code
 date: 2026-11-20
 notes: >-
   Badaoui–Vaughan (Sami Hani Badaoui and Sarah Ellen Mary Vaughan),
-  with computer-assisted implementation and local auditing. This
+  with computational assistance from GPT-6 and local auditing. This
   standard-library Python 3 generator uses a fixed seed and elementary
   variable-slope draws; it does not depend on the unpublished 113-million
   construction. It emits 136,499,992 geometrically valid ten-line
