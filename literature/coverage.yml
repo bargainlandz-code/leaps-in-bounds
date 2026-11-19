@@ -233,11 +233,12 @@ chromatic-number-space:
   - "Most current bounds are unrefereed 2026 work (#68)."
 
 moving-sofa:
-  status: partial
-  reviewed: 2026-11-17
-  sources: [romik-2016]
+  status: complete
+  reviewed: 2026-11-19
+  sources: [wagner-1976, guy-1977, gerver-1992, romik-2016, kallus-romik-2017, baek-2024]
   gaps:
-  - "Hammersley and Gerver not read directly (#79)."
+  - "Hammersley 1968 (Bull. Inst. Math. Appl. 4, 66-85) isn't online; its bounds are taken from Wagner 1976 and Gerver 1992, and Wagner says the proof of 2√2 appeared in an editorial commentary in the same bulletin in 1969 (vol. 5, 80-81)."
+  - "The Shephard piano, which Gerver 1992 says slightly improved Hammersley's sofa in the late 1960s, was never published and has no reported area. Romik 2016 reports, from Stewart (2004), that B. F. Logan found Gerver's shape in 1976 but didn't publish it."
 
 tammes:
   status: partial
