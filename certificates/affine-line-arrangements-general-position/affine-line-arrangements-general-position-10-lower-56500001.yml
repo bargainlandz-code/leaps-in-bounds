@@ -15,13 +15,10 @@ notes: >-
   standard-library Python 3 generator uses a fixed seed and elementary
   variable-slope draws; it does not depend on the unpublished 113-million
   construction. It emits 136,499,992 geometrically valid ten-line
-  candidate rows, which may contain repeated combinatorial types.
-  Local independent C++ verification using exact crossing-order keys
-  and a conservative one-sided Bloom filter counted 56,813,040
-  definitely distinct types. The complete Python witness was generated
-  locally and its SHA-256 matched the independently generated C++
-  reference witness. The uncompressed output is 19,790,153,424 bytes,
-  exceeding the current generator-witness limit. A separately developed,
-  trusted streaming checker that validates general position and counts
-  distinct canonical types is required before site verification; this
-  certificate is not claimed to be verified by the site yet.
+  candidate rows (19,790,153,424 bytes), which may contain repeated
+  combinatorial types. Local independent C++ verification using exact
+  crossing-order keys and a conservative one-sided Bloom filter counted
+  56,813,040 definitely distinct types, and the bound claimed is a
+  conservative value below that count. The complete Python witness was
+  generated locally and its SHA-256 matched the independently generated
+  C++ reference witness.
