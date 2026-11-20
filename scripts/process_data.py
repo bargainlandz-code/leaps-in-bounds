@@ -28,6 +28,7 @@ from certificates import (
     load_certificates,
     load_manifest,
 )
+from coverage import blocked_record, load_blocked, load_coverage
 from utils import Value, QuotedString, process_constant_images
 
 
@@ -201,7 +202,7 @@ def assign_updates_and_values(
         
         # Check if bounds are now equal, indicating an exact value
         if (constant["lower_bound"] and constant["upper_bound"] and 
-            constant["lower_bound"].latex == constant["upper_bound"].latex):
+            constant["lower_bound"].key == constant["upper_bound"].key):
             constant["exact_value"] = constant["lower_bound"]
             
         # Check if bounds are inconsistent
@@ -339,7 +340,7 @@ def bound_events(
         ]
         candidates.sort(key=lambda c: (
             -EVIDENCE_RANK[c["status"]],
-            Value(str(c["value"])).latex != event["value"].latex,
+            str(c["value"]) != event["value"].key,
             c["date"],
             c["id"],
         ))
@@ -350,7 +351,7 @@ def bound_events(
                 "kind": cert["kind"],
                 "certificate": cert["id"],
                 "source": None,
-                "value": Value(str(cert["value"])) if str(cert["value"]) != event["value"].latex else None,
+                "value": Value(str(cert["value"])) if str(cert["value"]) != event["value"].key else None,
                 "date": cert["date"],
             }
         else:
@@ -397,22 +398,27 @@ def build_histories(constants: dict[str, dict[str, Any]]) -> None:
         constant["history"] = history
         lower, upper = constant["lower_bound"], constant["upper_bound"]
         constant["exact_value"] = lower if lower is not None and upper is not None and (
-            lower.latex == upper.latex
+            lower.key == upper.key
             or lower.decimal_approx is not None and lower.decimal_approx == upper.decimal_approx
         ) else None
         del constant["update_records"]
 
 
-def find_unverified_bounds(constants: Mapping[str, Mapping[str, Any]]) -> list[dict[str, Any]]:
+def find_unverified_bounds(
+    constants: Mapping[str, Mapping[str, Any]],
+    blocked: Mapping[tuple[str, str], Mapping[str, Any]],
+) -> list[dict[str, Any]]:
     """List the current bounds whose best evidence isn't verified yet, for
     constants in families that accept certificates.
 
     Each entry gives the bound, its discovery and best evidence, the
     strongest verified bound if any, and whether a witness can certify it or
-    it needs a Lean proof. Call after build_histories, before the values are
-    written out.
+    it needs a Lean proof, and why it can't be certified yet if that's
+    recorded in certificates/blocked.yml. Call after build_histories, before
+    the values are written out.
     """
     unverified = []
+    listed = set()
     for constant_id, constant in constants.items():
         if not constant["certifiable"]:
             continue
@@ -439,8 +445,56 @@ def find_unverified_bounds(constants: Mapping[str, Mapping[str, Any]]) -> list[d
                 "verified": verified.to_dict() if verified is not None else None,
                 "verified_certificate": constant[f"verified_{side}_certificate"],
                 "certify_with": "witness" if family.witness_bound == side else "lean",
+                "blocked": blocked_record(blocked, constant_id, side, event["date"]),
             })
+            listed.add((constant_id, side))
+    if obsolete := sorted(set(blocked) - listed):
+        print(f"Warning: certificates/blocked.yml lists {len(obsolete)} bounds that are verified "
+              f"or not current, and can be removed: {', '.join(f'{c} {s}' for c, s in obsolete)}")
     return unverified
+
+
+def find_open_targets(constants: Mapping[str, Mapping[str, Any]]) -> list[dict[str, Any]]:
+    """List the constants whose value isn't known exactly, in families that
+    accept certificates: the places where a new bound can be submitted.
+
+    Each entry gives the current bounds and their best evidence, the gap
+    between them, what kind of certificate could improve each side, and
+    where to find the family's formal statement and search notes. Call after
+    build_histories, before the values are written out.
+    """
+    targets = []
+    for constant_id, constant in constants.items():
+        if not constant["certifiable"] or constant["exact_value"] is not None:
+            continue
+        family = FAMILIES[constant["family"]]
+        lower, upper = constant["lower_bound"], constant["upper_bound"]
+        gap = relative_gap = None
+        if lower is not None and upper is not None \
+                and lower.decimal_approx is not None and upper.decimal_approx is not None:
+            gap = upper.decimal_approx - lower.decimal_approx
+            if lower.decimal_approx > 0:
+                relative_gap = round(gap / lower.decimal_approx, 6)
+        dates = [e["date"] for e in constant["history"] if e["date"] is not None]
+        notes = pathlib.Path("notes") / f"{constant['family']}.md"
+        targets.append({
+            "constant": constant_id,
+            "family": constant["family"],
+            "name": constant["name"],
+            "lower_bound": lower.to_dict() if lower is not None else None,
+            "lower_evidence": constant["lower_bound_evidence"],
+            "upper_bound": upper.to_dict() if upper is not None else None,
+            "upper_evidence": constant["upper_bound_evidence"],
+            "gap": gap,
+            "relative_gap": relative_gap,
+            "last_improvement": max(dates) if dates else None,
+            "improve_lower_with": "witness" if family.witness_bound == "lower" else "lean",
+            "improve_upper_with": "witness" if family.witness_bound == "upper" else "lean",
+            "statement": "formal/" + family.lean_module.replace(".", "/") + ".lean",
+            "notes": str(notes) if notes.exists() else None,
+            "page": f"/constants/{constant_id}/",
+        })
+    return targets
 
 
 def list_certificates(constants: Mapping[str, Mapping[str, Any]]) -> list[dict[str, Any]]:
@@ -727,11 +781,16 @@ def main() -> None:
             for field in data:
                 constants[constant_id][field] = data[field]
 
+    coverage = load_coverage(families, sources)
+    blocked = load_blocked(constants)
+
     certificates = load_certificates()
     attach_certificates(constants, certificates, load_manifest())
     build_histories(constants)
     with open("_data/unverified_bounds.yml", "w") as file:
-        yaml.dump(find_unverified_bounds(constants), file, sort_keys=False)
+        yaml.dump(find_unverified_bounds(constants, blocked), file, sort_keys=False)
+    with open("_data/open_targets.yml", "w") as file:
+        yaml.dump(find_open_targets(constants), file, sort_keys=False)
     certificate_rows = list_certificates(constants)
     with open("_data/certificates.yml", "w") as file:
         yaml.dump(certificate_rows, file, sort_keys=False)
@@ -763,6 +822,10 @@ def main() -> None:
     for family_id, family in families.items():
         family["certifiable"] = family_id in FAMILIES
         family["stats"] = calculate_family_stats(family_id, constants)
+        review = coverage.get(family_id)
+        family["literature_review"] = (
+            {"status": review["status"], "reviewed": review["reviewed"]} if review else None
+        )
 
     write_families(families, "_data/families.yml")
 

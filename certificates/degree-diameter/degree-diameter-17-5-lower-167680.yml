@@ -1,0 +1,18 @@
+constant: degree-diameter-17-5
+bound: lower
+value: 167680
+kind: witness
+witness:
+  format: hamming-lines
+  file: degree-diameter-17-5-lower-167680.h4l
+submitted_by: bargainlandz-code
+date: 2026-11-16
+notes: >-
+  Sami Hani Badaoui and Sarah Ellen Mary Vaughan extended Dharunish
+  Yugeswardeenoo's graph of degree 16 and diameter 5 on 159744 vertices
+  (November 2026) by adding a false twin, joined to the same neighbors, for
+  each of 7936 vertices whose neighborhoods are disjoint, so no degree rises
+  above 17 and the diameter stays 5. The base graph is written as 624 copies
+  of the Hamming graph H(4,4), with each line of four vertices joined
+  completely to a partner line in another copy. The construction was found
+  with AI-assisted computational exploration.

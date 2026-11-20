@@ -143,6 +143,7 @@ debruijn-newman:
     wikidata: Q2248459
     wikipedia_en: De_Bruijn–Newman_constant
   display_type: single
+  representative_image: debruijn-newman
   parameters: []
   added_by: daniel-munro
 
@@ -167,7 +168,7 @@ van-der-waerden:
 
 stamp-folding:
   name: "Stamp folding"
-  description: "The number of distinct ways to fold a strip of $n$ labeled stamps."
+  description: "$s(n)$ is the number of ways to fold a strip of $n$ stamps, hinged where they meet, into a pile one stamp in size, counted by the order of the stamps in the pile."
   external_ids:
     mathworld: StampFolding
     wikidata: Q6753749
@@ -177,14 +178,14 @@ stamp-folding:
   representative_image: stamp-folding-3
   id_template: "stamp-folding-{n}"
   name_template: "Stamp folding $s({n})$"
-  description_template: "The number of distinct ways to fold a strip of ${n}$ labeled stamps."
+  description_template: "The number of ways to fold a strip of ${n}$ stamps into a pile one stamp in size, counted by the order of the stamps in the pile."
   parameters: [n]
   parameter_values: [[[1, 29]]]
   added_by: daniel-munro
 
 map-folding:
   name: "Map folding"
-  description: "The number of distinct ways to fold an $m \\times n$ rectangle into a unit square."
+  description: "The number of ways to fold an $m \\times n$ map, creased along the lines of its grid of unit squares, into a pile one square in size, counted by the order of the squares in the pile."
   external_ids:
     mathworld: MapFolding
     wikidata: Q6753749
@@ -195,8 +196,8 @@ map-folding:
   display_columns: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
   representative_image: map-folding-2-2
   id_template: "map-folding-{m}-{n}"
-  name_template: "Map folding (${m} \\times {n})$"
-  description_template: "The number of distinct ways to fold a ${m} \\times {n}$ rectangle into a unit square."
+  name_template: "Map folding $({m} \\times {n})$"
+  description_template: "The number of ways to fold a ${m} \\times {n}$ map along its creases into a pile one square in size, counted by the order of the squares in the pile."
   parameters: [m, n]
   parameter_values:
   - [2, [2, 18]]
@@ -208,16 +209,17 @@ map-folding:
   added_by: daniel-munro
 
 disk-covering:
-  name: "Disk covering problem"
-  description: "The smallest value $r(n)$ such that $n$ disks of radius $r(n)$ can be arranged to cover the unit disk."
+  name: "Covering a disk with disks"
+  description: "$r(n)$ is the smallest radius such that $n$ disks of that radius can cover the unit disk, of radius 1."
   external_ids:
     mathworld: DiskCoveringProblem
     msc: 52C15
     wikipedia_en: Disk_covering_problem
   display_type: sequence
+  representative_image: disk-covering-7
   id_template: "disk-covering-{n}"
-  name_template: "Disk covering problem $r({n})$"
-  description_template: "The smallest value $r({n})$ such that ${n}$ disks of radius $r({n})$ can be arranged to cover the unit disk."
+  name_template: "Covering a disk with ${n}$ disks"
+  description_template: "The smallest radius such that ${n}$ disks of that radius can cover the unit disk, of radius 1."
   parameters: [n]
   parameter_values: [[[1, 25]]]
   added_by: daniel-munro
@@ -237,8 +239,23 @@ circle-in-equilateral:
   parameter_values: [[[1, 15]]]
   added_by: daniel-munro
 
+circle-in-square:
+  name: "Circle packing in a square"
+  description: "$s(n)$ is the side of the smallest square into which $n$ unit circles (of radius 1) can be packed. Equivalently, $s(n) = 2 + 2/d_n$, where $d_n$ is the largest possible minimum distance between $n$ points in a unit square."
+  external_ids:
+    msc: 52C15
+    wikipedia_en: Circle_packing_in_a_square
+  display_type: sequence
+  representative_image: circle-in-square-15
+  id_template: "circle-in-square-{n}"
+  name_template: "Packing ${n}$ unit circles in a square"
+  description_template: "The side of the smallest square into which ${n}$ unit circles (of radius 1) can be packed."
+  parameters: [n]
+  parameter_values: [[[1, 36]]]
+  added_by: daniel-munro
+
 minimal-superpermutation:
-  name: "Minimal superpermutation problem"
+  name: "Minimal superpermutations"
   description: "$L(n)$ is the length of the shortest string that contains each permutation of $n$ symbols as a contiguous substring."
   external_ids:
     msc: 05A05
@@ -256,28 +273,28 @@ minimal-superpermutation:
 
 affine-line-arrangements:
   name: "Arrangements of lines in the affine plane"
-  description: "The number of ways of arranging $n$ lines in the (affine) plane."
+  description: "The number of combinatorially different arrangements of $n$ lines in the plane, where lines may be parallel and more than two may meet at a point. Two arrangements are the same if a homeomorphism of the plane, which may reverse its orientation, takes the lines of one to the lines of the other."
   external_ids:
     oeis: A241600
   display_type: sequence
   representative_image: affine-line-arrangements-6
   id_template: "affine-line-arrangements-{n}"
   name_template: "Arrangements of ${n}$ lines in the affine plane"
-  description_template: "The number of ways of arranging ${n}$ lines in the (affine) plane."
+  description_template: "The number of combinatorially different arrangements of ${n}$ lines in the plane, which may be parallel or meet more than two at a point."
   parameters: [n]
   parameter_values: [[[1, 12]]]
   added_by: daniel-munro
 
 affine-line-arrangements-general-position:
   name: "Arrangements of lines in general position"
-  description: "The number of ways of arranging $n$ straight lines in general position in the (affine) plane."
+  description: "The number of combinatorially different arrangements of $n$ lines in general position in the plane: no two parallel and no three through a point. Two arrangements are the same if a homeomorphism of the plane, which may reverse its orientation, takes the lines of one to the lines of the other."
   external_ids:
     oeis: A090338
   display_type: sequence
   representative_image: affine-line-arrangements-general-position-5
   id_template: "affine-line-arrangements-general-position-{n}"
   name_template: "Arrangements of ${n}$ lines in general position"
-  description_template: "The number of ways of arranging ${n}$ straight lines in general position in the (affine) plane."
+  description_template: "The number of combinatorially different arrangements of ${n}$ lines in the plane with no two parallel and no three through a point."
   parameters: [n]
   parameter_values: [[[1, 12]]]
   added_by: daniel-munro
@@ -463,7 +480,7 @@ rectilinear-crossing:
 
 multicolor-ramsey-triangle:
   name: "Multicolor Ramsey numbers for triangles"
-  description: "The multicolor Ramsey number $R_k(3) = R(3,3,\\ldots,3)$ is the smallest number $n$ such that any coloring of the edges of the complete graph $K_n$ with $k$ colors contains a monochromatic triangle. A coloring of $1, \\ldots, m$ with no monochromatic solution to $x + y = z$ colors the edges of $K_{m+1}$ with no monochromatic triangle, by coloring the edge $uv$ with the color of $|u - v|$, so $R_k(3) \\ge S(k) + 2$, where $S(k)$ is the Schur number."
+  description: "The multicolor Ramsey number $R_k(3) = R(3,3,\\ldots,3)$ is the smallest number $n$ such that any coloring of the edges of the complete graph $K_n$ with $k$ colors contains a monochromatic triangle. A coloring of $1, \\ldots, m$ with no monochromatic solution to $x + y = z$ colors the edges of $K_{m+1}$ with no monochromatic triangle, by coloring the edge $uv$ with the color of $\\lvert u - v \\rvert$, so $R_k(3) \\ge S(k) + 2$, where $S(k)$ is the Schur number."
   external_ids:
     msc: 05D10
     oeis: A003323
@@ -492,4 +509,32 @@ chromatic-number-space:
   description_template: "The fewest colors needed to color the points of $\\mathbb{{R}}^{{{n}}}$ so that no two points at distance exactly 1 have the same color."
   parameters: [n]
   parameter_values: [[[2, 12]]]
+  added_by: daniel-munro
+
+moving-sofa:
+  name: "Moving sofa constant"
+  description: "The moving sofa constant is the largest area of a connected shape in the plane that can be moved, by rotations and translations, around a right-angled corner in a hallway of unit width. Baek (2024) proved that it is the area of Gerver's sofa, $2.21953166\\ldots$, which has no known closed form."
+  external_ids:
+    mathworld: MovingSofaProblem
+    msc: 49Q10
+    oeis: A128463
+    wikipedia_en: Moving_sofa_problem
+  display_type: single
+  representative_image: moving-sofa
+  parameters: []
+  added_by: daniel-munro
+
+tammes:
+  name: "Tammes problem"
+  description: "$T(n)$ is the largest possible least angle, in degrees, between two of $n$ points on a sphere: equivalently, the largest angular diameter of $n$ equal circles that can be packed on the sphere without overlapping."
+  external_ids:
+    msc: 52C17
+    wikipedia_en: Tammes_problem
+  display_type: sequence
+  representative_image: tammes-13
+  id_template: "tammes-{n}"
+  name_template: "Tammes problem $T({n})$"
+  description_template: "The largest possible least angle, in degrees, between two of ${n}$ points on a sphere."
+  parameters: [n]
+  parameter_values: [[[2, 30]]]
   added_by: daniel-munro

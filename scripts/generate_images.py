@@ -37,10 +37,22 @@ from typing import Any, Callable, Iterable, Sequence
 
 import yaml
 
-from certificates import (Radical, affine_dimension, eccentricity_at_most, girth, has_monochromatic_sum, has_monochromatic_triangle, is_cap,
-                          is_isosceles_set, is_snake, load_certificates, network_depth, no_three_collinear, orbit_closure, read_graph,
-                          read_comparators, read_grid_points, read_integer_points, orientation, rectilinear_crossings, read_marks, read_points, read_radical_points, read_symmetries,
-                          read_ternary_points, read_transitions, read_vectors, read_witness_data, transition_vertices)
+from certificates.families.cap_set import is_cap, read_ternary_points
+from certificates.families.golomb import read_marks
+from certificates.families.isosceles_set import affine_dimension, is_isosceles_set, read_radical_points
+from certificates.families.kissing_number import orbit_closure, read_symmetries, read_vectors
+from certificates.families.multicolor_ramsey import has_monochromatic_triangle
+from certificates.families.no_three_in_line import read_grid_points
+from certificates.families.rectilinear_crossing import orientation, read_integer_points, rectilinear_crossings
+from certificates.families.schur import has_monochromatic_sum
+from certificates.families.snake_in_the_box import is_snake, read_transitions, transition_vertices
+from certificates.families.sorting_network import network_depth, read_comparators
+from certificates.families.tammes import read_rational_vectors
+from certificates.geometry import no_three_collinear, read_points
+from certificates.graphs import diameter_at_most, edge_arrays, girth, read_graph
+from certificates.loading import load_certificates
+from certificates.values import Radical
+from certificates.witness import read_witness_data
 from utils import GENERATED_IMAGES_DIR
 
 #########
@@ -150,9 +162,11 @@ def certificates() -> dict[str, dict[str, Any]]:
 
 
 def witness(constant_id: str, bound: str) -> dict[str, Any] | None:
-    """The strongest witness certificate for a bound on a constant, if any."""
+    """The strongest witness certificate for a bound on a constant, if any,
+    leaving out generators, which aren't run to build the site."""
     certs = [c for c in certificates().values()
-             if c["constant"] == constant_id and c["bound"] == bound and c["kind"] == "witness"]
+             if c["constant"] == constant_id and c["bound"] == bound and c["kind"] == "witness"
+             and c["witness"].get("format") != "generator"]
     if not certs:
         return None
     return (max if bound == "lower" else min)(certs, key=lambda c: c["approx"])
@@ -175,7 +189,7 @@ def check(condition: bool, message: str) -> None:
 
 
 def adjacency(n: int, edges: Iterable[tuple[int, int]]) -> list[int]:
-    """Bitmask adjacency lists, as used by scripts/certificates.py."""
+    """Bitmask adjacency lists, as used by scripts/certificates/graphs.py."""
     adj = [0] * n
     for u, v in edges:
         adj[u] |= 1 << v
@@ -321,7 +335,7 @@ def render_degree_diameter(constant_id: str, d: int, k: int) -> Svg | None:
     pos, edges = petersen()
     adj = adjacency(len(pos), edges)
     check(max(bin(a).count("1") for a in adj) <= d, f"{constant_id}: degree above {d}")
-    check(all(eccentricity_at_most(adj, v, k) for v in range(len(adj))), f"{constant_id}: diameter above {k}")
+    check(diameter_at_most(len(adj), *edge_arrays(adj), k), f"{constant_id}: diameter above {k}")
     check(len(pos) == exact_value(constant_id), f"{constant_id}: {len(pos)} vertices is not the value")
     return draw_graph(pos, edges, edge_width=2, vertex_radius=5)
 
@@ -442,6 +456,52 @@ def render_circle_in_equilateral(constant_id: str, n: int) -> Svg | None:
     svg = Svg(0, 0, s, h)
     svg.add(svg.group((svg.circle(c, 1) for c in centers), fill=FILL, stroke=EDGE, stroke_width=1.5))
     svg.add(svg.polygon([(0, 0), (s, 0), (s / 2, h)], fill="none", stroke=INK, stroke_width=2, stroke_linejoin="round"))
+    return svg
+
+
+def render_circle_in_square(constant_id: str, n: int) -> Svg | None:
+    """The witness packing of n unit circles in a square."""
+    cert = witness(constant_id, "upper")
+    if cert is None:
+        return None
+    s = cert["approx"]
+    centers = [(float(x), float(y)) for x, y in read_points(read_witness_data(cert))]
+    svg = Svg(0, 0, s, s)
+    svg.add(svg.group((svg.circle(c, 1) for c in centers), fill=FILL, stroke=EDGE, stroke_width=1.5))
+    svg.add(svg.polygon([(0, 0), (s, 0), (s, s), (0, s)], fill="none", stroke=INK, stroke_width=2, stroke_linejoin="round"))
+    return svg
+
+
+def disk_covering(n: int) -> tuple[float, list[tuple[float, float]]] | None:
+    """The known optimal coverings of the unit disk by n equal disks with
+    simple coordinates: the radius and the centers."""
+    if n == 3:
+        return math.sqrt(3) / 2, on_circle(3, 1 / 2, start=0)
+    if n == 4:
+        return math.sqrt(2) / 2, [(x / 2, y / 2) for x, y in [(1, 1), (-1, 1), (-1, -1), (1, -1)]]
+    if n == 7:
+        return 1 / 2, [(0, 0)] + on_circle(6, math.sqrt(3) / 2, start=0)
+    return None
+
+
+def render_disk_covering(constant_id: str, n: int) -> Svg | None:
+    """A covering of the unit disk by n disks of the optimal radius."""
+    covering = disk_covering(n)
+    value = exact_value(constant_id)
+    if covering is None or value is None:
+        return None
+    r, centers = covering
+    check(len(centers) == n and math.isclose(r, value, rel_tol=1e-6), f"{constant_id}: the covering doesn't match the value")
+    # Every point of a fine grid in the unit disk, and of its boundary, is covered
+    samples = [(i / 200, j / 200) for i in range(-200, 201) for j in range(-200, 201) if i * i + j * j <= 200 * 200]
+    samples += on_circle(3600)
+    check(all(min(math.dist(p, c) for c in centers) <= r + 1e-9 for p in samples), f"{constant_id}: the disks don't cover the unit disk")
+    m = max(math.hypot(*c) + r for c in centers)
+    svg = Svg(-m, -m, m, m)
+    svg.add(svg.circle((0, 0), 1, fill=MUTED, fill_opacity=0.5))
+    svg.add(svg.group((svg.circle(c, r) for c in centers), fill=FILL, fill_opacity=0.55, stroke=EDGE, stroke_width=1.5))
+    svg.add(svg.circle((0, 0), 1, fill="none", stroke=INK, stroke_width=2))
+    svg.add(svg.group((svg.circle(c, 2.5 / svg.scale) for c in centers), fill=EDGE))
     return svg
 
 
@@ -1444,6 +1504,276 @@ def render_chromatic_space(constant_id: str, n: int) -> Svg | None:
 
 ############
 # Families #
+#####################
+# Analytic functions #
+#####################
+
+def debruijn_newman_h(lams: Sequence[float], xs: Sequence[float]) -> list[list[float]]:
+    """H_λ(x) = ∫₀^∞ e^{λu²} Φ(u) cos(xu) du for real x, by the trapezoid rule:
+    Φ(u) is below 10⁻²⁰⁰ for u > 1.2, and the values keep their sign and a
+    few digits for x up to about 105 in double precision."""
+    import numpy as np
+    u = np.linspace(0, 1.2, 4001)
+    k = np.arange(1, 12)[:, None]
+    phi = ((2 * np.pi ** 2 * k ** 4 * np.exp(9 * u) - 3 * np.pi * k ** 2 * np.exp(5 * u))
+           * np.exp(-np.pi * k ** 2 * np.exp(4 * u))).sum(axis=0)
+    weights = np.full(len(u), u[1] - u[0])
+    weights[[0, -1]] /= 2
+    cosines = np.cos(np.outer(xs, u))
+    return [list(cosines @ (np.exp(lam * u ** 2) * phi * weights)) for lam in lams]
+
+
+def zero_curves(xs: Sequence[float], ys: Sequence[float], values: Sequence[Sequence[float]]) -> list[list[tuple[float, float]]]:
+    """The curves where values[i][j], sampled at (xs[j], ys[i]), is zero, by
+    marching squares, joined into polylines."""
+    def crossing(p: tuple[float, float, float], q: tuple[float, float, float]) -> tuple[float, float]:
+        t = p[2] / (p[2] - q[2])
+        return (p[0] + t * (q[0] - p[0]), p[1] + t * (q[1] - p[1]))
+    segments = []
+    for i in range(len(ys) - 1):
+        for j in range(len(xs) - 1):
+            corners = [(xs[j], ys[i], values[i][j]), (xs[j + 1], ys[i], values[i][j + 1]),
+                       (xs[j + 1], ys[i + 1], values[i + 1][j + 1]), (xs[j], ys[i + 1], values[i + 1][j])]
+            points = [crossing(corners[e], corners[(e + 1) % 4]) for e in range(4)
+                      if (corners[e][2] > 0) != (corners[(e + 1) % 4][2] > 0)]
+            if len(points) == 2:
+                segments.append(points)
+            elif len(points) == 4:  # A saddle: pair the crossings around the corners whose sign the center has
+                center = sum(c[2] for c in corners) > 0
+                if (corners[0][2] > 0) == center:
+                    segments += [[points[0], points[1]], [points[2], points[3]]]
+                else:
+                    segments += [[points[3], points[0]], [points[1], points[2]]]
+    # Join segments that share endpoints
+    key = lambda p: (round(p[0], 9), round(p[1], 9))
+    ends: dict[tuple[float, float], list[int]] = {}
+    for n, (p, q) in enumerate(segments):
+        ends.setdefault(key(p), []).append(n)
+        ends.setdefault(key(q), []).append(n)
+    used = [False] * len(segments)
+    curves = []
+    for n in range(len(segments)):
+        if used[n]:
+            continue
+        used[n] = True
+        curve = list(segments[n])
+        for forward in (True, False):
+            while True:
+                end = curve[-1] if forward else curve[0]
+                nexts = [m for m in ends[key(end)] if not used[m]]
+                if not nexts:
+                    break
+                used[nexts[0]] = True
+                p, q = segments[nexts[0]]
+                point = q if key(p) == key(end) else p
+                if forward:
+                    curve.append(point)
+                else:
+                    curve.insert(0, point)
+        curves.append(curve)
+    return curves
+
+
+def render_debruijn_newman(constant_id: str) -> Svg | None:
+    """The real zeros of H_λ(x) as λ varies. At λ = 0 they're twice the
+    heights of the zeros of the Riemann zeta function on the critical line.
+    Going down, neighboring zeros meet and leave the real line; Λ is the
+    least λ above which all the zeros are real, and the band shows its
+    current bounds."""
+    import mpmath
+    with open("_data/constants.yml") as file:
+        constant = yaml.safe_load(file)[constant_id]
+    low, high = constant["lower_bound"]["decimal_approx"], constant["upper_bound"]["decimal_approx"]
+    xmin, xmax, lmin, lmax, stretch = 40.0, 104.0, -10.0, 1.0, 4.0  # λ is drawn `stretch` times larger than x
+    xs = [xmin + (xmax - xmin) * j / 640 for j in range(641)]
+    lams = [lmin + (lmax - lmin) * i / 220 for i in range(221)]
+    values = debruijn_newman_h(lams, xs)
+    # The zeros at λ = 0 are twice those of zeta
+    row = values[lams.index(0.0)]
+    zeros = [xs[j] - row[j] * (xs[j + 1] - xs[j]) / (row[j + 1] - row[j])
+             for j in range(len(xs) - 1) if (row[j] > 0) != (row[j + 1] > 0)]
+    expected = [2 * float(mpmath.zetazero(n).imag) for n in range(1, 30)]
+    expected = [z for z in expected if xmin < z < xmax]
+    check(len(zeros) == len(expected) and all(abs(a - b) < 0.05 for a, b in zip(zeros, expected)),
+          f"{constant_id}: the zeros of H_0 aren't twice those of zeta")
+    svg = Svg(xmin, lmin * stretch, xmax, lmax * stretch)
+    svg.add(svg.rect(xmin, low * stretch, xmax - xmin, (high - low) * stretch, fill=PALETTE[1], fill_opacity=0.35))
+    svg.add(svg.line((xmin, 0), (xmax, 0), stroke=INK, stroke_width=1, stroke_dasharray="4 3"))
+    curves = zero_curves(xs, [lam * stretch for lam in lams], values)
+    svg.add(svg.group((svg.polyline(c) for c in curves), fill="none", stroke=EDGE, stroke_width=2,
+                      stroke_linejoin="round", stroke_linecap="round"))
+    svg.add(svg.group((svg.circle((z, 0), 3 / svg.scale) for z in zeros), fill=INK, stroke="white", stroke_width=1))
+    return svg
+
+
+#########
+# Sphere #
+#########
+
+def render_tammes(constant_id: str, n: int) -> Svg | None:
+    """The witness points on the sphere, each two at least the bound apart,
+    with the great-circle arcs between the closest pairs. Points and arcs on
+    the far side are faint."""
+    cert = witness(constant_id, "lower")
+    if cert is None:
+        return None
+    vectors = [[float(c) for c in v] for v in read_rational_vectors(read_witness_data(cert))]
+    points = [[c / math.sqrt(sum(x * x for x in v)) for c in v] for v in vectors]
+    if n <= 3:
+        # Turn the line or plane of the points toward the viewer, so that they
+        # aren't drawn on the rim: the axis through them (n = 2) or the normal
+        # to their plane (n = 3) goes to the z axis
+        p, q = points[0], points[-1]
+        axis = p if n == 2 else [p[1] * q[2] - p[2] * q[1], p[2] * q[0] - p[0] * q[2], p[0] * q[1] - p[1] * q[0]]
+        axis = [c / math.sqrt(sum(x * x for x in axis)) for c in axis]
+        # Rotate about k = axis × z by the angle between them (Rodrigues)
+        k = [axis[1], -axis[0], 0.0]
+        sin_t, cos_t = math.sqrt(sum(x * x for x in k)), axis[2]
+        if sin_t > 1e-12:
+            k = [c / sin_t for c in k]
+
+            def turn(v: list[float]) -> list[float]:
+                kv = sum(a * b for a, b in zip(k, v))
+                cross = [k[1] * v[2] - k[2] * v[1], k[2] * v[0] - k[0] * v[2], k[0] * v[1] - k[1] * v[0]]
+                return [v[i] * cos_t + cross[i] * sin_t + k[i] * kv * (1 - cos_t) for i in range(3)]
+            points = [turn(v) for v in points]
+    cosines = {(i, j): sum(a * b for a, b in zip(points[i], points[j])) for i, j in itertools.combinations(range(n), 2)}
+    least = math.degrees(math.acos(max(-1.0, min(1.0, max(cosines.values())))))
+    check(least >= cert["approx"] - 1e-9, f"{constant_id}: points are closer than the bound")
+    # Pairs within a hair of the least angle, the contacts of the configuration
+    # (none for antipodal points, which have no one arc between them)
+    contacts = [pair for pair, c in cosines.items()
+                if math.degrees(math.acos(max(-1.0, min(1.0, c)))) < min(least + 1e-3, 179.9)]
+
+    def view(p: Sequence[float]) -> list[float]:
+        # Turn the sphere a little so that few points are exactly on the rim
+        a, b = math.radians(20), math.radians(-25)
+        x, y, z = p
+        x, y = x * math.cos(a) - y * math.sin(a), x * math.sin(a) + y * math.cos(a)
+        y, z = y * math.cos(b) - z * math.sin(b), y * math.sin(b) + z * math.cos(b)
+        return [x, y, z]  # y is depth: negative is in front
+
+    m = 1.08
+    svg = Svg(-m, -m, m, m)
+    svg.defs.append('<radialGradient id="ball" cx="0.38" cy="0.32" r="0.8">'
+                    f'<stop offset="0" stop-color="white"/><stop offset="0.5" stop-color="{FILL}"/>'
+                    '<stop offset="1" stop-color="#9fb8d8"/></radialGradient>')
+    svg.add(svg.circle((0, 0), 1, fill="url(#ball)", stroke=INK, stroke_width=1.5))
+    back, front = [], []
+    for i, j in contacts:
+        p, q = points[i], points[j]
+        theta = math.acos(max(-1.0, min(1.0, cosines[i, j])))
+        arc = []
+        for k in range(25):
+            s = k / 24
+            w1, w2 = math.sin((1 - s) * theta) / math.sin(theta), math.sin(s * theta) / math.sin(theta)
+            arc.append(view([w1 * a + w2 * b for a, b in zip(p, q)]))
+        # Split the arc where it crosses the rim, so each part is all front or back
+        part = [arc[0]]
+        for a, b in zip(arc, arc[1:]):
+            if (a[1] < 0) != (b[1] < 0):
+                (front if a[1] < 0 else back).append(part)
+                part = [a]
+            part.append(b)
+        (front if part[-1][1] < 0 else back).append(part)
+    svg.add(svg.group((svg.polyline([(p[0], p[2]) for p in part]) for part in back),
+                      fill="none", stroke=EDGE, stroke_width=1, stroke_opacity=0.3, stroke_linecap="round"))
+    dots = [view(p) for p in points]
+    svg.add(svg.group((svg.circle((p[0], p[2]), 0.035) for p in dots if p[1] >= 0), fill=EDGE, fill_opacity=0.3))
+    svg.add(svg.group((svg.polyline([(p[0], p[2]) for p in part]) for part in front),
+                      fill="none", stroke=EDGE, stroke_width=1.75, stroke_linecap="round"))
+    svg.add(svg.group((svg.circle((p[0], p[2]), 0.045) for p in dots if p[1] < 0), fill=PALETTE[1], stroke="white", stroke_width=1))
+    return svg
+
+
+##############
+# Moving sofa #
+##############
+
+# Gerver's sofa, from Romik's explicit solution (arXiv:1606.08111, Table 1):
+# the hallway's rotation path x(t) for 0 <= t <= π/2, in five pieces
+GERVER_PHI = 0.039177364790083641
+GERVER_THETA = 0.681301509382724894
+GERVER_PIECES = {
+    "a": (1.210322422072688751, -0.25), "b": (-0.527624598026784624, 0.920258385160637622),
+    "c": (0.626045522848465867, -0.944750803946430751), "d": (1.313022761424232933, -0.525382670414554437),
+    "e": (1.210322422072688751, 0.25),
+}
+GERVER_KAPPA = [(-0.210322422072688751, 0.25), (-0.919179292771593322, 0.472406619750805465),
+                (-0.613763229430251668, 0.889626479003221860), (-0.308347166088910014, 0.472406619750805465),
+                (-1.017204036787814585, 0.25)]
+
+
+def gerver_path(t: float) -> tuple[float, float]:
+    """Romik's rotation path x(t) for Gerver's sofa."""
+    phi, theta, half = GERVER_PHI, GERVER_THETA, math.pi / 2
+    c, s = math.cos(t), math.sin(t)
+    (a1, a2), (b1, b2), (c1, c2), (d1, d2), (e1, e2) = GERVER_PIECES.values()
+    if t < phi:
+        v, k = (a1 * c + a2 * s - 1, -a2 * c + a1 * s - 0.5), GERVER_KAPPA[0]
+    elif t < theta:
+        v, k = (-t * t / 4 + b1 * t + b2, t / 2 - b1 - 1), GERVER_KAPPA[1]
+    elif t <= half - theta:
+        v, k = (c1 - t, c2 + t), GERVER_KAPPA[2]
+    elif t <= half - phi:
+        v, k = (-t / 2 + d1 - 1, -t * t / 4 + d1 * t + d2), GERVER_KAPPA[3]
+    else:
+        v, k = (e1 * c + e2 * s - 0.5, -e2 * c + e1 * s - 1), GERVER_KAPPA[4]
+    return c * v[0] - s * v[1] + k[0], s * v[0] + c * v[1] + k[1]
+
+
+def gerver_sofa(columns: int = 1200, times: int = 4000) -> list[tuple[float, float]]:
+    """The boundary of Gerver's sofa, as the shape that stays in the hallway
+    x(t) + R_t(L) for every t (Romik, eq. (6)), where L is the hallway
+    {x <= 1, 0 <= y <= 1} ∪ {0 <= x <= 1, y <= 1}. Each vertical line meets
+    it in an interval, below the outer walls and above the notch carved by the
+    inner corner, computed for sampled t. Returns the polygon, top then
+    bottom."""
+    import numpy as np
+    ts = np.linspace(0, math.pi / 2, times + 1)
+    path = np.array([gerver_path(t) for t in ts])
+    X = np.linspace(-2.25, 1, columns + 1)[:, None]
+    c, s = np.cos(ts)[None, :], np.sin(ts)[None, :]
+    dx, x1 = X - path[:, 0][None, :], path[:, 1][None, :]
+    with np.errstate(divide="ignore", invalid="ignore"):
+        # In the hallway's frame, a point is at (c dx + s dy, -s dx + c dy)
+        # with dy = y - x1: that's at most 1 in both, and not negative in both
+        upper = np.minimum(np.where(s > 1e-12, (1 - c * dx) / s + x1, np.where(1 - c * dx >= 0, np.inf, -np.inf)).min(1),
+                           np.where(c > 1e-12, (1 + s * dx) / c + x1, np.where(1 + s * dx >= 0, np.inf, -np.inf)).min(1))
+        notch = np.minimum(np.where(s > 1e-12, -c * dx / s + x1, np.where(-c * dx > 0, np.inf, -np.inf)),
+                           np.where(c > 1e-12, s * dx / c + x1, np.where(s * dx > 0, np.inf, -np.inf))).max(1)
+    upper, lower = np.minimum(upper, 1), np.maximum(notch, 0)
+    keep = upper > lower
+    xs = X[:, 0][keep]
+    return list(zip(xs, upper[keep])) + list(zip(xs[::-1], lower[keep][::-1]))
+
+
+def render_moving_sofa(constant_id: str) -> Svg | None:
+    """Gerver's sofa going around the corner of the hallway: where it starts,
+    halfway round, and where it ends."""
+    polygon = gerver_sofa(columns=400)
+    area = abs(sum(x0 * y1 - x1 * y0 for (x0, y0), (x1, y1) in zip(polygon, polygon[1:] + polygon[:1])) / 2)
+    value = exact_value(constant_id)
+    check(value is not None and abs(area - value) < 2e-3, f"{constant_id}: the sofa's area isn't the value")
+    half = math.pi / 2
+
+    def pose(t: float, shift: tuple[float, float]) -> list[tuple[float, float]]:
+        # The sofa in the hallway's frame at time t: R_{-t}(p - x(t)), moved along the arm
+        x0, y0 = gerver_path(t)
+        c, s = math.cos(t), math.sin(t)
+        return [(c * (x - x0) + s * (y - y0) + shift[0], -s * (x - x0) + c * (y - y0) + shift[1]) for x, y in polygon]
+
+    xmin, ymin = -4.6, -4.6
+    svg = Svg(xmin, ymin, 1.15, 1.15)
+    svg.add(svg.polygon([(xmin, 0), (0, 0), (0, ymin), (1, ymin), (1, 1), (xmin, 1)], fill=MUTED, fill_opacity=0.35))
+    svg.add(svg.group([svg.polygon(pose(0, (-1.3, 0))), svg.polygon(pose(half, (0, -1.3)))],
+                      fill=FILL, fill_opacity=0.6, stroke=EDGE, stroke_width=1, stroke_dasharray="4 3"))
+    svg.add(svg.polygon(pose(math.pi / 4, (0, 0)), fill=FILL, stroke=EDGE, stroke_width=2, stroke_linejoin="round"))
+    svg.add(svg.polyline([(xmin, 1), (1, 1), (1, ymin)], fill="none", stroke=INK, stroke_width=2.5, stroke_linejoin="round"))
+    svg.add(svg.polyline([(xmin, 0), (0, 0), (0, ymin)], fill="none", stroke=INK, stroke_width=2.5, stroke_linejoin="round"))
+    return svg
+
+
 ############
 
 def ints(constant_id: str, prefix: str) -> list[int]:
@@ -1457,6 +1787,8 @@ FAMILIES: dict[str, tuple[str, Callable[[str], Svg | None]]] = {
     "cage": ("cage-", lambda c: render_cage(c, *ints(c, "cage-"))),
     "degree-diameter": ("degree-diameter-", lambda c: render_degree_diameter(c, *ints(c, "degree-diameter-"))),
     "circle-in-equilateral": ("circle-in-equilateral-", lambda c: render_circle_in_equilateral(c, *ints(c, "circle-in-equilateral-"))),
+    "circle-in-square": ("circle-in-square-", lambda c: render_circle_in_square(c, *ints(c, "circle-in-square-"))),
+    "disk-covering": ("disk-covering-", lambda c: render_disk_covering(c, *ints(c, "disk-covering-"))),
     "square-packing": ("square-packing-in-square-", lambda c: render_square_packing(c, *ints(c, "square-packing-in-square-"))),
     "kissing-number": ("kissing-number-", lambda c: render_kissing_number(c, *ints(c, "kissing-number-"))),
     "minimal-superpermutation": ("minimal-superpermutation-", lambda c: render_superpermutation(c, *ints(c, "minimal-superpermutation-"))),
@@ -1479,6 +1811,9 @@ FAMILIES: dict[str, tuple[str, Callable[[str], Svg | None]]] = {
     "isosceles-set": ("isosceles-set-", lambda c: render_isosceles_set(c, *ints(c, "isosceles-set-"))),
     "rectilinear-crossing": ("rectilinear-crossing-", lambda c: render_rectilinear_crossing(c, *ints(c, "rectilinear-crossing-"))),
     "chromatic-number-space": ("chromatic-number-space-", lambda c: render_chromatic_space(c, *ints(c, "chromatic-number-space-"))),
+    "debruijn-newman": ("debruijn-newman", render_debruijn_newman),
+    "tammes": ("tammes-", lambda c: render_tammes(c, *ints(c, "tammes-"))),
+    "moving-sofa": ("moving-sofa", render_moving_sofa),
 }
 
 
@@ -1491,7 +1826,8 @@ def generate(families: Sequence[str]) -> list[str]:
     for family in families:
         prefix, render = FAMILIES[family]
         for constant_id in constant_ids:
-            if not constant_id.startswith(prefix) or not constant_id[len(prefix):].replace("-", "").isdigit():
+            # A family's constants, or the constant itself for a family of one
+            if constant_id != prefix and not (constant_id.startswith(prefix) and constant_id[len(prefix):].replace("-", "").isdigit()):
                 continue
             svg = render(constant_id)
             if svg is None:

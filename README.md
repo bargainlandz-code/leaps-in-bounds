@@ -38,10 +38,11 @@ The certificates and the tools around them:
 - `formal/`: Lean project with the trusted formal statements of each bound (`LeapsInBounds/Statements/`) and submitted proofs (`LeapsInBounds/Proofs/`).
 - `notes/`: Working notes on searches for certificates, one scratchpad per family, so people and agents can build on earlier attempts instead of repeating them. See [notes/README.md](notes/README.md).
 - `certificates/verified.yml`: The manifest of verified certificates, recording a hash of the evidence that was checked, the commit of the checkers, who ran them and when.
+- `scripts/certificates/`: The checkers, with one module per family in `scripts/certificates/families/` (matching the formal statements in `formal/LeapsInBounds/Statements/`) and shared code for loading certificates, the manifest, and checking Lean proofs.
 - `scripts/verify_certificates.py`: Runs the checkers on certificates' evidence and records those that pass in the manifest. A maintainer runs it before merging new certificates.
 - `scripts/check_certificates.py`: Checks that every certificate is well formed, consistent with the others and the literature, and verified or attested. CI runs it on pull requests, without running the checkers.
 
-So far, certificates are accepted for Ramsey numbers, van der Waerden numbers, cages, the degree-diameter problem, minimal superpermutations, kissing numbers, packing unit squares in a square, packing unit circles in an equilateral triangle, Schur and weak Schur numbers, multicolor Ramsey numbers for triangles, optimal Golomb rulers, arrangements of lines in the plane, snakes and coils in the hypercube, cap sets, the no-three-in-line problem, isosceles sets, the size and depth of sorting networks, the rectilinear crossing number of complete graphs, and the chromatic number of Euclidean space.
+Certificates are accepted for every family: Ramsey numbers, van der Waerden numbers, cages, the degree-diameter problem, minimal superpermutations, kissing numbers, packing unit squares in a square, packing unit circles in an equilateral triangle and in a square, Schur and weak Schur numbers, multicolor Ramsey numbers for triangles, optimal Golomb rulers, arrangements of lines in the plane, snakes and coils in the hypercube, cap sets, the no-three-in-line problem, isosceles sets, the size and depth of sorting networks, the rectilinear crossing number of complete graphs, the chromatic number of Euclidean space, the busy beaver functions, stamp and map folding, covering a disk with disks, the de Bruijn–Newman constant, the Tammes problem, and the moving sofa constant.
 
 ## Images
 
@@ -92,7 +93,7 @@ For more open-ended contributions, such as asking whether a family of constants 
 
 Contributions are credited to the GitHub account that made them on the [contributions page](https://leapsinbounds.org/contributions/#contributors).
 
-To have an AI agent contribute, give it one of these prompts:
+AI agents should start with [AGENTS.md](AGENTS.md), which links to the rest, and can use the [MCP server](scripts/mcp_server.py) in a clone of this repository to find targets and check certificates. To have one contribute, give it one of these prompts:
 
 ```
 Read https://github.com/daniel-munro/leaps-in-bounds/blob/main/certificates/README.md and follow it to submit a verified bound to Leaps in Bounds.
@@ -104,5 +105,22 @@ Read https://github.com/daniel-munro/leaps-in-bounds/blob/main/literature/README
 
 ## Related Projects
 
+Other collections of open problems and records:
+
 - [Big O Speedrun](https://bigospeedrun.com) - Leaderboards of recent progress on bounds for algorithm running times and other constants, with Lean-verified submissions.
 - [Optimization Constants in Mathematics](https://github.com/teorth/optimizationproblems) - A curated collection of optimization constants in mathematics, often arising from solving a variational problem, or finding the best constant in a functional inequality.
+- [Erdős Problems](https://www.erdosproblems.com) - A database of the problems posed by Paul Erdős, with their status, references and discussion.
+- [Formal Conjectures](https://github.com/google-deepmind/formal-conjectures) - Open conjectures stated formally in Lean.
+- [OEIS](https://oeis.org) - The On-Line Encyclopedia of Integer Sequences, which many of the families here are entries in.
+
+Records and surveys for particular families, kept up to date by others:
+
+- [Small Ramsey Numbers](https://doi.org/10.37236/21) - Stanisław Radziszowski's dynamic survey of Ramsey numbers, including the multicolor ones.
+- [Dynamic Cage Survey](https://doi.org/10.37236/37) - Geoffrey Exoo and Robert Jajcay's survey of cages.
+- [The Degree Diameter Problem for General Graphs](https://web.mat.upc.edu/francesc.comellas/delta-d/table_degree_diameter.html) - Francesc Comellas's table of the largest known graphs of given degree and diameter.
+- [Packomania](http://www.packomania.com) - Eckard Specht's records for packing circles and spheres in many containers.
+- [Table of Spherical Codes](https://spherical-codes.org) - Henry Cohn's table of the best known spherical codes, including the Tammes problem, with which are proved optimal.
+- [Erich Friedman's Packing Center](https://erich-friedman.github.io/packing/) - Best known packings and coverings of many shapes in many others, with pictures.
+- [The Busy Beaver Challenge](https://bbchallenge.org) - The collaborative project that proved BB(5) = 47,176,870, and works on larger busy beavers.
+- [The No-Three-in-Line Problem](http://wwwhomes.uni-bielefeld.de/achim/no3in/readme.html) - Achim Flammenkamp's records and database of configurations.
+- [Snake-in-the-Box](https://www.minortriad.com/snake/) - Tom Ace's records for snakes and coils in the hypercube, with their witnesses.

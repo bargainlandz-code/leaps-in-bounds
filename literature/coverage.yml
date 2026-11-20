@@ -1,0 +1,283 @@
+# How thoroughly each family's history has been reviewed in the literature.
+# See "Coverage" in literature/README.md. Families not listed haven't been reviewed.
+#
+# status: complete (every improvement in the sources below, up to the review
+#   date, is recorded with its original source where it could be found, except
+#   the gaps listed) or partial (otherwise; the gaps say what's missing).
+# reviewed: when the literature was last searched. A later review only needs
+#   what appeared after this date.
+# sources: surveys, tables and databases read through for the review, by their
+#   IDs in sources.yml.
+# gaps: known missing or doubtful parts of the history.
+#
+# Backfilled on 2026-11-17 from the descriptions of pull requests #16 to #82,
+# with every family starting as partial. Families have been marked complete
+# since, as their reviews were finished.
+
+ramsey:
+  status: partial
+  reviewed: 2026-11-15
+  sources: [ejc-ds1-small-ramsey-numbers, radziszowski-2025-slides]
+  gaps:
+  - "Table I of all 19 revisions of DS1 compared (#69), but primary sources for early bounds are cited only through DS1: Abbott 1965, Giraud 1967 and Irving 1973 lack full references."
+  - "R(9,14) <= 89203 appears in DS1 revisions 11 to 13 but contradicts later revisions, and was left out (#65)."
+  - "Google Research's improved_bounds repository checked commit by commit (#53); no paper found for its October 2026 bounds."
+
+square-packing:
+  status: partial
+  reviewed: 2026-11-15
+  sources: [ejc-ds7-packing-unit-squares, ejc-ds7-2000, ellsworth-squares-in-squares, ellsworth-squares-in-squares-compared]
+  gaps:
+  - "arXiv:2609.37410 says Nagamochi's 2005 lower-bound proof is incomplete; the nagamochi-2005 rows may need a note (#69)."
+
+busy-beaver-shift:
+  status: complete
+  reviewed: 2026-11-19
+  sources: [michel-busy-beaver, oeis-A060843, aaronson-2020, rado-1962, lin-1963, lin-1965, brady-1964, lynn-1972, weimann-1973, ludewig-schult-wankmuller-1983, brady-1983, brady-1988, marxen-1990, ligocki-2022-05-13]
+  gaps:
+  - "Brady's 107 for k = 4 is credited to his October 1966 paper, which wasn't read; his abstract in Notices of the AMS (June 1965) may state it first, and wasn't found."
+  - "S(4) <= 107 is credited to Brady 1983. Weimann, Casper and Fenzl (GI conference, October 1972; LNEMS 78, 1973) and Weimann's 1973 dissertation claimed it earlier with partly hand-checked computer searches, and Brady announced his proof in a 1974 report and 1975 abstracts, which weren't read."
+  - "Lynn's 1974 machine with S(5) >= 7707 and Brady's 6-state S(6) >= 13488 were first published in Brady 1983, after Schult's machines from the January 1983 Dortmund competition, so they aren't recorded."
+  - "Green 1964 wasn't read, and no step count from it is recorded; the bbchallenge wiki computes S >= 197,700,005 for Green's 7-state machine. Seven-state bounds implied by 6-state records, such as those from 1990 to 2022 listed on the wiki, aren't recorded."
+  - "The 2010 Kropitz machines are dated from Michel's survey and Kropitz's 2011 thesis; Marxen's pages, which may have posted the June 2010 machine first, weren't checked. The Wythagoras 2014 page on the Googology Wiki was blocked (HTTP 402); its value comes from Aaronson 2020 and Michel."
+  - "The October 2026 7-state machine claimed by J. Ketchersid (S(7) > 3↑²⁰3), listed on the bbchallenge wiki's Busy Beaver Champions page as never verified, isn't recorded. The May 2025 7-state records are dated from Discord message timestamps cited by the bbchallenge wiki."
+
+busy-beaver-ones:
+  status: complete
+  reviewed: 2026-11-19
+  sources: [michel-busy-beaver, oeis-A028444, aaronson-2020, rado-1962, lin-1963, lin-1965, brady-1964, lynn-1972, weimann-1973, ludewig-schult-wankmuller-1983, brady-1983, brady-1988, marxen-1990, ligocki-2022-05-13]
+  gaps:
+  - "Green 1964 wasn't read: Σ(5) >= 17, Σ(6) >= 35 and Σ(7) >= 22961 are as given by Michel and Lynn 1972, and Lynn says Green only mentions that a 17-ones 5-state machine is known. Green's own construction for k = 4 (7 ones) isn't recorded."
+  - "Brady's 13 for k = 4 is credited to his October 1966 paper, which wasn't read; his June 1965 abstract in Notices of the AMS may state it first."
+  - "Σ(4) <= 13 is credited to Brady 1983. Weimann, Casper and Fenzl (October 1972, published 1973) and Weimann's 1973 dissertation claimed it earlier, and Brady announced his proof in a 1974 report and 1975 abstracts, which weren't read."
+  - "Lynn's 1974 machine with Σ(5) >= 112 and Brady's Σ(6) >= 117 were first published in Brady 1983, after Schult's machines from the January 1983 Dortmund competition, so they aren't recorded. Dewdney 1985 (Uhing's 1,915) wasn't read."
+  - "Seven-state bounds implied by 6-state records aren't recorded. The October 2026 7-state claim by J. Ketchersid (> 3↑²⁰3), marked never verified on the bbchallenge wiki, isn't recorded."
+
+kissing-number:
+  status: partial
+  reviewed: 2026-11-15
+  sources: [cohn-kissing-numbers]
+  gaps:
+  - "The earlier records 500, 582 and 1606 have no confirmed primary source and cite Ganzhinov (#27)."
+  - "Lower-bound records before the current ones were added only where a paper confirms them (#27)."
+  - "Some Odlyzko-Sloane upper bounds come through later tables (#69)."
+
+degree-diameter:
+  status: partial
+  reviewed: 2026-11-15
+  sources: [comellas-degree-diameter-table, ejc-ds14-degree-diameter]
+  gaps:
+  - "Comellas' table has records newer than the literature data, such as (7,3) 176 and (5,5) 660 (#69)."
+  - "The 20-9 value may be a transcription error; the 2010 paper is paywalled and wasn't checked (#34)."
+  - "Dinneen-Hafner 1994 cells credited to unknown authors were left out (#49)."
+  - "Several primary sources for upper bounds were read only through the Miller-Siran survey (#65)."
+
+cage:
+  status: partial
+  reviewed: 2026-11-17
+  sources: [ejc-ds16-cages, exoo-et-al-2026]
+  gaps:
+  - "Lower bounds from Erdos-Sachs, Hoffman-Singleton, Damerell, Bannai-Ito and Biggs-Ito were taken from the Exoo-Jajcay survey, without reading the primary sources (#65)."
+  - "One of the 35 upper bounds in the survey wasn't added (#65)."
+
+debruijn-newman:
+  status: complete
+  reviewed: 2026-11-19
+  sources: [rodgers-tao-2018, odlyzko-2000, csordas-o-s-v-1993, polymath-2019, platt-trudgian-2020, planat-raymond-2026]
+  gaps:
+  - "Most originals before 2011 are paywalled and weren't read: Csordas-Norfolk-Varga 1987, te Riele 1990, Csordas-Ruttan-Varga 1991, de Bruijn 1950, Ki-Kim-Lee 2009. Their bounds are taken from Odlyzko 2000 (Section 1), Csordas-Smith-Varga 1994 (1.5), Rodgers-Tao 2018 (Table 1) and the Polymath paper (Section 1)."
+  - "Norfolk, Ruttan and Varga's -0.385 (Progress in Approximation Theory, Springer 1992, 403-418, doi:10.1007/978-1-4612-2966-7_17) isn't in the history: Odlyzko 2000 places it between te Riele's -5 and Csordas-Ruttan-Varga's -0.0991 (1991-06), but its book appeared in 1992, from a conference held in March 1990, and no date that places it between the two was found."
+  - "Csordas-Smith-Varga's -4.379e-6 is dated 1993-11, from Csordas-Odlyzko-Smith-Varga citing it as to appear; the paper itself was received 1992-11-02 and published 1994-03, and no earlier public version was found."
+  - "Since 2026-08, several unrefereed, computer-assisted preprints and certificate deposits have claimed unconditional upper bounds below 0.2 (Mosaic Intelligence 0.1875, 0.16 and 0.1595; Gomila 0.1787854; Planat 0.1732; Kornaus 0.172422; Gordon 0.158; Planat-Raymond 0.156821; Raymond 0.149396), listed in Planat-Raymond 2026, Table 1. They aren't in the history until they are checked or refereed. Conditional bounds (Hakimoglu-Brown 0.13963 and Raymond 0.107965 assuming no zeta zeros with real part above 7/8; Planat 0.148612 under unproved premises) are also left out."
+
+van-der-waerden:
+  status: partial
+  reviewed: 2026-11-17
+  sources: [wikipedia-van-der-waerden]
+  gaps:
+  - "History assembled from Berlekamp, Rabung 1979, Herwig et al., Heule, SAT@Delft, Monroe, Komkov and Rowley (#69), but no single survey covers it; rows were once credited to Rabung-Lotts 2012 or Blankenship 2018 for values known earlier (#33)."
+
+stamp-folding:
+  status: complete
+  reviewed: 2026-11-19
+  sources: [oeis-a000136-stamp-folding, sainte-lague-1926, sade-1949, touchard-1950, lunnon-1968, koehler-1968, lunnon-1971, di-francesco-golinelli-guitter-1996]
+  gaps:
+  - "Gardner (Wheels, Life and Other Mathematical Amusements, 1983, ch. 7, p. 61) and MathWorld say a later paper of Lunnon's carried the strip counts to n = 28. It isn't Lunnon 1971 (Computer Journal 14, 75-80), whose Table 1 stops at 12 leaves; Gardner also lists an unpublished 'The Map-Folding Problem Revisited'. If that was ever public, it may be the first source for n = 25 to 28, now credited to Di Francesco, Golinelli and Guitter 1996."
+  - "Sainte-Laguë, Avec des nombres et des lignes (Vuibert, 1937; 3rd ed. 1946), Part 2, ch. 2, pp. 147-162, which discusses the stamp problem, not found online. It could correct the 1926 values for n = 7 to 10 before Sade 1949."
+
+map-folding:
+  status: partial
+  reviewed: 2026-11-17
+  sources: [oeis-a001415-map-folding-2-n, oeis-a001416-map-folding-3-n, oeis-a001418-map-folding-n-n]
+  gaps:
+  - "The 4 x 9 count was left out because the Code Golf SE table's entries disagree (#76)."
+  - "New terms 8 x 8, 2 x 19 and 2 x 20 may be missing (#33)."
+
+disk-covering:
+  status: partial
+  reviewed: 2026-11-15
+  sources: [friedman-circles-covering-circles]
+  gaps:
+  - "No publication found behind the proofs Friedman's page claims for n = 11 to 20; those lower bounds rest only on the page (#33, #69)."
+
+circle-in-equilateral:
+  status: complete
+  reviewed: 2026-11-19
+  sources: [friedman-circles-in-triangles, wikipedia-circle-in-equilateral, melissen-1993, graham-lubachevsky-1995, tedeschi-2021]
+  gaps:
+  - "Milano 1987, credited by Friedman with proving n = 4 and 5, has no full reference (title, venue and date unknown), and Melissen 1993 doesn't cite it; if it can't be confirmed, n = 4 and 5 belong to Melissen 1993."
+  - "Melissen 1994 (n = 11) and Payan 1997 (n = 14) not read beyond their zbMATH reviews and secondary sources (Springer and ScienceDirect block automated access)."
+
+circle-in-square:
+  status: partial
+  reviewed: 2026-11-17
+  sources: [packomania-csq, peikert-1994, markot-2021, szabo-specht-2007]
+  gaps:
+  - "Goldberg 1970, Wengerodt, Nurmela-Ostergard and Schwartz not read in full (#72)."
+  - "Finders unknown for n = 11 to 16, 18 and 20; n = 22 to 27 and 29 to 35 may belong to Nurmela-Ostergard 1997 (#72)."
+  - "The proofs for n = 25 and 36 reportedly have gaps (#72)."
+
+minimal-superpermutation:
+  status: complete
+  reviewed: 2026-11-19
+  sources: [engen-vatter-2018, egan-superpermutations, wikipedia-superpermutation, houston-2014, houston-pantone-vatter-2018, superpermutation-almanac]
+  gaps:
+  - "Ashlock and Tillotson 1993 (Congressus Numerantium 93, 91-98) isn't online; its construction and lower bound n! + (n-1)! + n - 2 are taken from Engen and Vatter (2018), Propositions 2.2 and 2.4. Who first showed L(4) = 33 by computer isn't clear (Johnston 2013 cites OEIS A180632, created by M. Hamm on 2010-09-13, whose early revisions weren't readable), so the lower bound 33 is credited to the 4chan bound of 2011."
+  - "Most 2026 bounds are AI-assisted Lean proofs posted to the Superpermutators Google Group or submitted to the Superpermutation Almanac, not refereed. Several use native_decide (L(7) >= 5898, 5899 and 5900, L(8) >= 46134, L(9) >= 408470). L(7) >= 5900 isn't listed by the Almanac, which has 5899."
+  - "Claims left out: V. Gheorghe's L(7) >= 5896 (2026-07-29), stated as conditional on his n = 6 proof, which Lebar's post treats as the previous best; Halfar's partial proof of L(7) >= 5901 (2026-10-28); C. Fritsch's claim that L(6) = 872 (Superpermutators, 2021-02), whose proof had acknowledged errors; Z. Hunter's 2019 draft lower bound, later completed as Hunter-Raudvere 2026."
+  - "Egan's L(9) <= 408966 is dated by the creation date of his page (2018-10-20), whose original version wasn't seen. The 5906 for n = 7 is dated 2019-02-27 from Egan's page, though the group announcement is 2019-03-02. Coanda's YouTube comment wasn't read. Group posts are dated in UTC; the group shows US Central time."
+
+affine-line-arrangements:
+  status: partial
+  reviewed: 2026-11-17
+  sources: [oeis-a241600-lines-on-plane]
+  gaps:
+  - "A241600(8) <= 4,134,940 (Finschi via Forcey) bounds combinatorial types, so it bounds rigid isotopy classes only if the two agree for 8 lines (#41)."
+
+affine-line-arrangements-general-position:
+  status: partial
+  reviewed: 2026-11-17
+  sources: [oeis-a090338-lines-on-plane-general, oeis-a006248-pseudolines]
+
+golomb-ruler:
+  status: complete
+  reviewed: 2026-11-19
+  sources: [shearer-golomb-table, babcock-1953, atkinson-hassenklover-1984, golomb-1972, garry-vanderschel-1998, distributed-net-ogr-24, distributed-net-ogr-25, distributed-net-ogr-26, distributed-net-ogr-27, distributed-net-ogr-28, wikipedia-golomb-ruler]
+  gaps:
+  - "Robinson and Bernstein 1967, Robinson 1979 and 1983, Shearer 1990, Dollas, Rankin and McCracken 1998, Atkinson, Santoro and Urrutia 1986 (IEEE) and Gardner's June 1972 column weren't read (paywalled); their bounds are taken from Shearer's table and Golomb's 1972 letter. Robinson and Bernstein tabulate rulers for 3 to 24 marks, which may include intermediate upper bounds (for 9, 13, 15 to 17 or 22 marks) not recorded here, and possibly the proofs for 5 to 7 marks that Shearer dates '1967?'."
+  - "The completion dates of the Garry-Vanderschel searches for 20, 22 and 23 marks aren't confirmed: Shearer gives '1997?' for 20, and the archived site only anticipates end of April 1999 for 22 and June 1999 for 23. The searches for 14 to 16 (1985-86), 17 and 18 (Sibert 1993, unpublished) and 19 marks (1993-94) are dated by their later publications."
+  - "The lower bounds 560 and 605 for 29 and 30 marks are Lemma 1 of Atkinson and Hassenklover evaluated at t = 3 and t = 4, not stated there. Monotonicity (Dimitromanolakis 2002, p. 8) with OGR-28 would give G(29) >= 586 and G(30) >= 587, but no source states them. LP lower bounds (Hansen, Jaumard and Meyer; Meyer and Jaumard 2006) weren't checked."
+
+schur:
+  status: complete
+  reviewed: 2026-11-19
+  sources: [oeis-a045652-schur, schur-1916, abbott-hanson-1972, whitehead-1973, irving-1973-schur, fredricksen-1979, exoo-1994, fredricksen-sweet-2000, heule-2017-schur, ageron-et-al-2021, eliahou-2016-schur, fettes-kramer-radziszowski-2004]
+  gaps:
+  - "Irving 1973 attributes S(k) <= floor(k!(e - 1/24)) to Whitehead, but Whitehead's 1973 paper doesn't state it (it gives R_5(3) <= 322); his 1971 USC dissertation, which may, wasn't found, so the bound is credited to Irving."
+  - "Fredricksen 1979 says S(5) >= 157 improves earlier lower bounds, citing his 'Five sum-free sets' (Proc. 6th Southeastern Conf., 1975, 309-314), which wasn't found; an S(5) bound between 121 and 157 may be missing."
+  - "Wan 1997 was read only through its zbMATH summary; its S(6..9) bounds are evaluated from the stated formulas, and the summary leaves unclear whether S_n is the largest n or one more."
+  - "Schur's footnote (p. 117) claims without proof that S(4) > 40; it isn't recorded. Baumert's 1961 computation of S(4) = 44 is unpublished (Abbott and Hanson 1972), so the bound is dated by Golomb and Baumert 1965, which was read only through later citations."
+  - "Upper bounds on S(k) from bounds on R_k(3) by S(k) <= R_k(3) - 2 are recorded only where a source states the Ramsey bound or the Schur bound; S(6) <= 1896 from R_6(3) <= 1898, for example, isn't recorded."
+
+weak-schur:
+  status: complete
+  reviewed: 2026-11-19
+  sources: [oeis-a072842-weak-schur, ageron-et-al-2021, walker-1952, eliahou-et-al-2012, eliahou-et-al-2013, rafilipojaona-2015]
+  gaps:
+  - "Eliahou et al. 2012 claim WS(6) >= 575 in a note added in proof, without a partition; it isn't recorded. Robilliard et al. (EA 2011, published 2012) was read only in its abstract, so its 574 keeps the date 2012 although Eliahou et al. say it came first."
+  - "Sierpinski's upper bound WS(n) < 2^[n!e] (Theory of Numbers, part 2, 1959; Elementary Theory of Numbers, 1964), reported by Bornsztein 2002, isn't included: the book wasn't read."
+  - "The lower bounds WS(n) >= S(n) implied by the Schur family, such as WS(8) >= 5286 and WS(9) >= 17694 from Rowley's 2019 Schur partitions, aren't included unless a source states them for WS."
+
+snake-in-the-box:
+  status: partial
+  reviewed: 2026-11-14
+  sources: [minortriad-snake, uga-sib-records]
+  gaps:
+  - "Many recent lower bounds are preprints or personal communications from Tom Ace's page (#43)."
+  - "No literature found for the upper bounds that certificates give (#65, #74)."
+
+coil-in-the-box:
+  status: partial
+  reviewed: 2026-11-14
+  sources: [minortriad-snake, uga-sib-records, lukito-2000]
+
+cap-set:
+  status: partial
+  reviewed: 2026-11-05
+  sources: [karapetyan-karapetyan-2026]
+  gaps:
+  - "Hill 1973, Calderbank-Fishburn and Edel-Bierbrauer attributions rest on secondary sources; the publishers blocked reading (#48)."
+
+no-three-in-line:
+  status: partial
+  reviewed: 2026-11-14
+  sources: [flammenkamp-no3in]
+  gaps:
+  - "The Hall et al. 1975 credit for small n may belong to Guy-Kelly 1968 (#48)."
+  - "No literature found for n = 75 and 77 (#65)."
+
+isosceles-set:
+  status: complete
+  reviewed: 2026-11-19
+  sources: [ionin-2009, oeis-a175769-isosceles-set, yi-2026, erdosproblems-503, lisonek-1997, kido-2008]
+  gaps:
+  - "Alweiss' lower bound C(d+1,2), recorded on the Erdős Problems page before Weisenberg's comment of 2025-08-09, is undated and left out; for n = 9 to 12 it would be one step before Weisenberg's C(d+1,2)+1."
+  - "Blokhuis' bound C(n+2,2) is dated to the 1984 CWI Tract; it first appeared in the T.H.-Memo 1981-10 (Eindhoven), Isosceles point sets in R^d, which couldn't be found, and the 1983 thesis's exact date is unknown."
+  - "Erdős 1946, Kelly 1947 (JSTOR) and Croft 1962 (Wiley) not read directly (bot checks); their bounds are as stated in Ionin 2009, Yi 2026 and the Erdős Problems page."
+  - "Lower bounds from two-distance sets alone (every two-distance set is isosceles), such as the largest ones in R^4 to R^7 classified by Lisoněk 1997, aren't included where a larger isosceles set was known by then or no source states them as isosceles sets; n = 8 is the exception, where Lisoněk's 45-point set is optimal."
+
+sorting-network-size:
+  status: partial
+  reviewed: 2026-11-11
+  sources: [dobbelaere-sorting-networks]
+  gaps:
+  - "Bose-Nelson, Floyd 1964, Batcher 1964, Kautz 1970, Knuth 1973, Juille 1995 and Ehlers 2017 read only through secondary sources (#58)."
+  - "Batcher's 1964 sizes for 17 to 32 inputs left out on purpose (#58)."
+
+sorting-network-depth:
+  status: partial
+  reviewed: 2026-11-11
+  sources: [dobbelaere-sorting-networks, parberry-1991]
+  gaps:
+  - "Depth bounds derived from merging networks for 17 to 24 inputs left out on purpose, and the date of the 64-comparator network for 16 inputs is unknown (#58)."
+
+rectilinear-crossing:
+  status: partial
+  reviewed: 2026-11-12
+  sources: [aichholzer-crossing-page, fabila-monroy-lopez-2014]
+  gaps:
+  - "Guy 1972, Singer 1971 and the Aichholzer 2002 and 2005 papers seen only through citations; crediting Guy alone for n <= 9 is a guess (#60)."
+  - "Some upper bounds have no date (#60)."
+
+multicolor-ramsey-triangle:
+  status: complete
+  reviewed: 2026-11-19
+  sources: [ejc-ds1-small-ramsey-numbers, ejc-ds1-r1-small-ramsey-numbers, ejc-ds1-r2-small-ramsey-numbers, ejc-ds1-r6-small-ramsey-numbers, ejc-ds1-r7-small-ramsey-numbers, fettes-kramer-radziszowski-2004, whitehead-1973, chung-1973, fredricksen-1979, exoo-1994, fredricksen-sweet-2000]
+  gaps:
+  - "Folkman 1974 wasn't read; Whitehead 1973 proves the same R_4(3) <= 65 from Folkman's notes. Golomb and Baumert 1965 (R_4(3) >= 46, via S(4) = 44), Sánchez-Flores 1995 and Wan 1997 were read only through Fettes-Kramer-Radziszowski 2004 and zbMATH reviews."
+  - "Chung's recurrence R_{k+1}(3) >= 3R_k(3) + R_{k-2}(3) - 3 implies R_5(3) >= 156 (1973) and, with Fredricksen 1979, R_6(3) >= 491 before Exoo's 500, but no source states them, so they aren't recorded."
+  - "R_4(3) <= 62 was claimed in Kramer's unpublished 1994 manuscript and announced in DS1 revision 7 (2000-07-25), but is dated by the 2004 journal paper. Xu, Xie and Chen 2002 (Mathematics in Economics 19, in Chinese, not found) give R_k(3) <= k!(e - 1/6) + 1, the same values as the FeKR-derived bounds for k = 5 to 9."
+  - "The 2026 Schur preprints imply R_8(3) >= 5364, 5374 and 5384 by R_k(3) >= S(k) + 2, but no source states them, so they aren't recorded."
+
+chromatic-number-space:
+  status: partial
+  reviewed: 2026-11-14
+  gaps:
+  - "Several bounds read only from later tables; Voronov's personal-communication bounds left out (#68)."
+  - "Most current bounds are unrefereed 2026 work (#68)."
+
+moving-sofa:
+  status: complete
+  reviewed: 2026-11-19
+  sources: [wagner-1976, guy-1977, gerver-1992, romik-2016, kallus-romik-2017, baek-2024]
+  gaps:
+  - "Hammersley 1968 (Bull. Inst. Math. Appl. 4, 66-85) isn't online; its bounds are taken from Wagner 1976 and Gerver 1992, and Wagner says the proof of 2√2 appeared in an editorial commentary in the same bulletin in 1969 (vol. 5, 80-81)."
+  - "The Shephard piano, which Gerver 1992 says slightly improved Hammersley's sofa in the late 1960s, was never published and has no reported area. Romik 2016 reports, from Stewart (2004), that B. F. Logan found Gerver's shape in 1976 but didn't publish it."
+
+tammes:
+  status: partial
+  reviewed: 2026-11-17
+  sources: [cohn-spherical-codes]
+  gaps:
+  - "The T(19) source couldn't be found (#79)."
+  - "Many sources read only through secondary ones (#79)."

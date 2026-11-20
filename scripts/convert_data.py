@@ -32,6 +32,9 @@ with open("_data/unverified_bounds.yml", "r") as file:
 with open("_data/certificates.yml", "r") as file:
     certificates = yaml.safe_load(file)
 
+with open("_data/open_targets.yml", "r") as file:
+    targets = yaml.safe_load(file)
+
 with open("_data/history.yml", "r") as file:
     history = yaml.safe_load(file)
 
@@ -68,6 +71,9 @@ with open("data/unverified_bounds.yml", "w") as f:
 with open("data/certificates.yml", "w") as f:
     yaml.dump(certificates, f, sort_keys=False)
 
+with open("data/open_targets.yml", "w") as f:
+    yaml.dump(targets, f, sort_keys=False)
+
 with open("data/history.yml", "w") as f:
     yaml.dump(history, f, sort_keys=False)
 
@@ -89,6 +95,9 @@ with open("data/unverified_bounds.json", "w") as f:
 
 with open("data/certificates.json", "w") as f:
     json.dump(certificates, f, indent=2)
+
+with open("data/open_targets.json", "w") as f:
+    json.dump(targets, f, indent=2)
 
 with open("data/history.json", "w") as f:
     json.dump(history, f, indent=2)
@@ -125,6 +134,9 @@ for family_id, family_data in families.items():
         elif k == 'external_ids':
             for id_k, id_v in v.items():
                 family_dict[f'id_{id_k}'] = id_v
+        elif k == 'literature_review':
+            family_dict['literature_review_status'] = v['status'] if v else None
+            family_dict['literature_reviewed'] = v['reviewed'] if v else None
         else:
             family_dict[k] = v
     families_list.append(family_dict)
@@ -159,11 +171,26 @@ for row in unverified:
     row_dict = row.copy()
     flatten_value_dict(row_dict, 'value')
     flatten_value_dict(row_dict, 'verified')
+    blocked = row_dict.pop('blocked')
+    for field in ['reason', 'checked', 'detail', 'stale']:
+        row_dict[f'blocked_{field}'] = blocked[field] if blocked else None
     unverified_list.append(row_dict)
 
 unverified_df = pd.DataFrame(unverified_list)
 unverified_df.to_csv("data/unverified_bounds.csv", index=False)
 unverified_df.to_csv("data/unverified_bounds.tsv", sep="\t", index=False)
+
+# Convert open targets to CSV and TSV
+targets_list = []
+for row in targets:
+    row_dict = row.copy()
+    flatten_value_dict(row_dict, 'lower_bound')
+    flatten_value_dict(row_dict, 'upper_bound')
+    targets_list.append(row_dict)
+
+targets_df = pd.DataFrame(targets_list)
+targets_df.to_csv("data/open_targets.csv", index=False)
+targets_df.to_csv("data/open_targets.tsv", sep="\t", index=False)
 
 # Convert certificates to CSV and TSV
 certificates_list = []

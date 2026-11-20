@@ -11,7 +11,7 @@ A certificate doesn't need to cite a source for its bound, or a source a certifi
 
 Anyone, including an AI agent, can submit a certificate by opening a pull request that adds a file here. CI checks that each certificate is well formed and consistent with the others and with the literature, and that a new certificate is at least as strong as the existing ones for the same bound. It comments on the pull request with the result for each new certificate and its role: a new bound, or evidence for the current bound or a weaker one. CI doesn't run the checkers on the evidence: a maintainer does that before merging. (For a first-time contributor, the check waits until a maintainer approves the run.)
 
-Only the families listed [below](#families) accept certificates so far. To ask for another family of constants to accept them, start a [GitHub Discussion](https://github.com/daniel-munro/leaps-in-bounds/discussions). Leaps in Bounds tracks specific mathematical constants: bounds on the running time of algorithms, or on asymptotic exponents and coefficients, such as for 3SUM or matrix multiplication, belong at [Big O Speedrun](https://bigospeedrun.com) instead.
+Every family of constants accepts certificates, in the forms listed [below](#families). For questions about a family's statements or checkers, start a [GitHub Discussion](https://github.com/daniel-munro/leaps-in-bounds/discussions). Leaps in Bounds tracks specific mathematical constants: bounds on the running time of algorithms, or on asymptotic exponents and coefficients, such as for 3SUM or matrix multiplication, belong at [Big O Speedrun](https://bigospeedrun.com) instead.
 
 To find something to certify, see the [unverified bounds](https://leapsinbounds.org/unverified/) (also as [JSON](https://leapsinbounds.org/data/unverified_bounds.json)): current bounds whose best evidence isn't a verified certificate yet, with their discovery and whether a witness can certify them.
 
@@ -51,7 +51,8 @@ lean:
 Leaps in Bounds shows the state of each problem and how it has progressed, rather than archiving data, so a certificate's evidence here is limited to 500 kB: its YAML file and its evidence files together, as stored. CI checks this.
 
 - Witness files can be compressed with gzip or xz, given with the extension `.gz` or `.xz` (such as `file: name.s6.xz`), and the checker decompresses them. Colorings and strings usually shrink by a factor of 10 or more, and graphs by up to half.
-- Larger witnesses can't be verified here, but can still be [attested](#attestations), with a link to the witness instead of a copy:
+- A witness that a short program can produce, however large, can be given as that program: a [generator](#generators).
+- Other larger witnesses can't be verified here, but can still be [attested](#attestations), with a link to the witness instead of a copy:
 
   ```yaml
   witness:
@@ -66,7 +67,25 @@ Leaps in Bounds shows the state of each problem and how it has progressed, rathe
 
 ### witness
 
-An explicit construction, checked by a verifier for the constant's family in [`scripts/certificates.py`](../scripts/certificates.py). Witnesses suit bounds that come from a construction, which is how most new lower bounds on extremal quantities are found.
+An explicit construction, checked by a verifier for the constant's family in [`scripts/certificates/families/`](../scripts/certificates/families/), one module per family. Witnesses suit bounds that come from a construction, which is how most new lower bounds on extremal quantities are found.
+
+#### Generators
+
+A witness can be given as a Python program that prints it, with `format: generator`:
+
+```yaml
+witness:
+  format: generator
+  file: affine-line-arrangements-10-lower-5000.py   # the program, here
+  output: lines         # the format of the witness it prints
+  output_sha256: 9c1e...   # SHA-256 of what it prints
+```
+
+The checker runs the program and checks what it printed to standard output as a witness in the format `output`, just as if it were a witness file. Whatever it prints is checked, so if that passes, it proves the bound. If its SHA-256 isn't the one given, the certificate still passes or fails on what was printed, with a warning: something differs from where the hash was computed, such as the version of Python or a package, so the witness checked isn't exactly the one submitted. Other fields of the witness, such as `symmetries`, apply to the output. This suits witnesses far beyond the [size limit](#size-limit) that come from a short description, such as a seeded random search or a recursive construction. The generator's output is what gets checked, so its correctness doesn't need trusting; but checking the output still has to take a reasonable time, about an hour at most.
+
+The generator runs with the Python and packages in [`requirements.txt`](../requirements.txt), with no input and hash randomization off. It must give the same output every time, so seed any random numbers, and don't depend on the time, the machine or the order of iteration over sets of objects other than strings and numbers. It runs in a sandbox, with no network and able to write only to its own temporary directory, for at most an hour of CPU time, and it can print at most 200 MB, unless its family's checker reads the output as a stream (as for [line arrangements](#arrangements-of-lines-affine-line-arrangements-n-and-affine-line-arrangements-general-position-n)). Running it runs the submission's code, so a maintainer reads a generator before running it to verify it. The checker needs `sandbox-exec` (built into macOS) or [bubblewrap](https://github.com/containers/bubblewrap) (`bwrap`, on Linux) for the sandbox.
+
+To fill in `output_sha256`, run your generator with `PYTHONHASHSEED=0 python your-generator.py | shasum -a 256`, or give 64 zeros for now, in quotes so YAML reads them as text, and check the certificate with `scripts/verify_certificates.py --dry-run`, which warns with the hash of the output when it's different.
 
 ### lean
 
@@ -96,7 +115,7 @@ Its theorem should state the family's statement in a form that's the same by def
 
 A certificate's status is one of:
 
-- **Verified:** a trusted verifier (a maintainer, listed in `TRUSTED_VERIFIERS` in [`scripts/certificates.py`](../scripts/certificates.py)) ran the checkers here on its evidence. [`verified.yml`](verified.yml) records this for each verified certificate: a hash of what it claims and its evidence files, the commit of the checkers used, who ran them and when. If the certificate's claim or evidence changes later, the hash no longer matches and the certificate needs verifying again. Other fields, such as `notes`, can change freely.
+- **Verified:** a trusted verifier (a maintainer, listed in `TRUSTED_VERIFIERS` in [`scripts/certificates/manifest.py`](../scripts/certificates/manifest.py)) ran the checkers here on its evidence. [`verified.yml`](verified.yml) records this for each verified certificate: a hash of what it claims and its evidence files, the commit of the checkers used, who ran them and when. If the certificate's claim or evidence changes later, the hash no longer matches and the certificate needs verifying again. Other fields, such as `notes`, can change freely.
 - **Attested:** checking the evidence here has been too slow so far, or it's too large to keep here, and someone else says they checked it with a checker they published. The site shows an attested bound in yellow, separately from verified ones, and lists it among the [unverified bounds](https://leapsinbounds.org/unverified/).
 - **Awaiting verification:** neither yet, as for a new submission. CI fails until a maintainer verifies it, and the site leaves it out.
 
@@ -117,7 +136,7 @@ attestation:
 
 The certificate still needs its evidence in the format its family accepts: here if it's within the [size limit](#size-limit), and otherwise as a link, with its hash for a witness or pinned to a commit for a Lean proof. For a Lean proof, the checker is whatever checked the proof against its statement, such as a [Comparator](https://github.com/leanprover/comparator) configuration with the axioms allowed, and the command builds and checks it; a check by someone other than the proof's authors, with a statement written independently of their code, counts for more. If the checker ran on another file, give it as `evidence` and say in `notes` how it corresponds to the witness here, so a maintainer can confirm that they're the same object, which is usually quick. The `checker` and `evidence` links must point to a fixed commit, not a branch, so they can't change later.
 
-Running someone else's checker again doesn't make an attested bound verified, since that's one more attestation. To upgrade one, make it checkable here: a faster checker for its family, a smaller witness for the same bound (within the size limit), or a Lean proof. A new certificate equal to an attested one is accepted for this.
+Running someone else's checker again doesn't make an attested bound verified, since that's one more attestation. To upgrade one, make it checkable here: a faster checker for its family, a smaller witness for the same bound (within the size limit), a generator for its witness, or a Lean proof. A new certificate equal to an attested one is accepted for this.
 
 ### For maintainers
 
@@ -176,6 +195,14 @@ Formal statements are in [`formal/LeapsInBounds/Statements/DegreeDiameter.lean`]
 - `UpperBound d k n` means `N(d,k) <= n`: every such graph has at most `n` vertices.
 
 Witnesses can certify lower bounds only. A witness for `N(d,k) >= n` is a graph on `n` vertices with maximum degree at most `d` and diameter at most `k`.
+
+Graphs too large for sparse6 within the [size limit](#size-limit) can use `format: hamming-lines` if they have this structure. It's a binary file, by convention with the extension `.h4l`:
+
+- The base graph has `F` fibers, each with 256 vertices `(x0, x1, x2, x3)`, coordinates from 0 to 3, so vertex `256 f + x0 + 4 x1 + 16 x2 + 64 x3`. Each fiber has 256 lines of 4 vertices: line `256 f + 64 a + i` varies coordinate `a` and fixes the other three, in increasing order, to the base-4 digits of `i`, least significant first. Each line has a partner line, the partners pairing up all `256 F` lines, and each line is joined completely to its partner (a `K_{4,4}`). There are no other edges.
+- Then `C` clones are added as vertices `256 F` onwards, each joined to the neighbors of its source vertex in the base graph.
+- The file is the 8 bytes `H4LINE01`, then `F` and `C` as 4-byte unsigned little-endian integers, then the partner of each line in order and the source of each clone, each as a `b`-bit number, where `b` is the number of bits in `256 F - 1`. These are written as one stream of bits, each number least significant bit first, packed into bytes from their least significant bit, with the last byte padded with 0 bits.
+
+The checker reconstructs the graph and checks that it's simple, as well as its degrees and diameter.
 
 ### Minimal superpermutations: `minimal-superpermutation-{n}`
 
@@ -238,6 +265,17 @@ witness:
     2\sqrt{3}, 2
     2\sqrt{3}, 4
 ```
+
+### Packing unit circles in a square: `circle-in-square-{n}`
+
+Formal statements are in [`formal/LeapsInBounds/Statements/CircleInSquare.lean`](../formal/LeapsInBounds/Statements/CircleInSquare.lean). A packing of `n` unit circles in the square `[0, s]²` places `n` closed unit disks inside it with pairwise disjoint interiors.
+
+- `RadicalLowerBound n terms d` means `s(n) >= radical terms d`: no packing of `n` unit circles fits in a square of smaller side.
+- `RadicalUpperBound n terms d` means `s(n) <= radical terms d`: `n` unit circles can be packed in a square of that side.
+
+Values are written as for [circle packing in a triangle](#packing-unit-circles-in-an-equilateral-triangle-circle-in-equilateral-n), and can also be decimals, such as `'6.747443'` (quoted, so that it's read as text).
+
+Witnesses can certify upper bounds only. A witness for `s(n) <= v` uses `format: points`: the `n` centers, one per line as `x, y`, with coordinates in the same form as values. The checker decides exactly, without rounding, that each center lies in `[1, v - 1]²` and is at distance at least 2 from the other centers. Most optimal packings have sides that aren't sums of square roots; for these, a witness can round the centers to decimals and the side up, certifying a value just above the optimum.
 
 ### Schur numbers: `schur-{k}` and `weak-schur-{k}`
 
@@ -327,7 +365,7 @@ Formal statements are in [`formal/LeapsInBounds/Statements/LineArrangement.lean`
 
 OEIS A241600 counts arrangements up to rigid isotopy rather than combinatorial type. Isotopic arrangements have the same type, so a lower bound on the number of types is also a lower bound for A241600.
 
-Witnesses can certify lower bounds only. A witness for `LowerBound n N` or `GeneralLowerBound n N` uses `format: lines`: `N` arrangements, one per row, each as `3n` integers `a b c`, one triple for each line `a x + b y = c`. The checker computes each arrangement's covectors exactly (at the vertices, on each edge, and on either side of each edge) and a canonical form of its type, and checks that no two are the same. For example, the two arrangements of 2 lines, parallel and crossing:
+Witnesses can certify lower bounds only. A witness for `LowerBound n N` or `GeneralLowerBound n N` uses `format: lines`: arrangements of at least `N` types, one per row, each as `3n` integers `a b c`, one triple for each line `a x + b y = c`. Arrangements of the same type can repeat, so a [generator](#generators) can print random samples without removing repeats itself. The checker computes a canonical form of each arrangement's type, and counts the distinct forms by an 8-byte hash of each: two types sharing a hash would only be undercounted. For an arrangement in general position, the form comes from the order in which the other lines cross each line, which is fast: about 0.1 ms per arrangement of 10 lines, on each core. For others, it comes from the arrangement's covectors, computed exactly (at the vertices, on each edge, and on either side of each edge), which is about 100 times slower. The checker reads a generator's output as a stream, so it can print any amount, as long as checking it takes about an hour at most. For example, the two arrangements of 2 lines, parallel and crossing:
 
 ```yaml
 witness:
@@ -361,6 +399,66 @@ Formal statements are in [`formal/LeapsInBounds/Statements/ChromaticNumberSpace.
 
 The same file proves that a lower bound never exceeds an upper bound. Only Lean proofs are accepted so far, here or attested.
 
+### Busy beaver functions: `busy-beaver-shift-{n}` and `busy-beaver-ones-{n}`
+
+Formal statements are in [`formal/LeapsInBounds/Statements/BusyBeaver.lean`](../formal/LeapsInBounds/Statements/BusyBeaver.lean). An `n`-state, 2-symbol Turing machine starts on a blank tape, infinite in both directions, and in each state, for each symbol read, writes a symbol, moves left or right, and goes to a state or halts. The halting transition also writes and moves, and counts as a step.
+
+- `ShiftLowerBound n N` means `BB(n) >= N`: some `n`-state machine halts after at least `N` steps.
+- `ShiftUpperBound n N` means `BB(n) <= N`: every `n`-state machine that halts does so within `N` steps.
+- `OnesLowerBound n N` and `OnesUpperBound n N` are the same for `Σ(n)`, the number of 1s on the tape when the machine halts.
+
+Witnesses can certify lower bounds only. A witness uses `format: turing-machine`: the machine in the [standard text format](https://wiki.bbchallenge.org/wiki/Standard_TM_Text_Format), such as `1RB1LB_1LA1RZ` for `BB(2) >= 6` and `Σ(2) >= 4`. For each state `A`, `B`, … in turn, separated by `_`, it gives the transitions on reading 0 and 1, each as the symbol to write, the direction (`L` or `R`) and the next state. A next state after the first `n` letters, conventionally `Z` or `H`, halts, and an undefined transition `---` halts as `1RZ` does. The machine starts in state `A`. The checker simulates it, for at most 10⁹ steps, so it can check the 5-state champion (47,176,870 steps) but not the 6- and 7-state ones, which run for far too long to simulate: those need a proof of the machine's behavior, in Lean here or [attested](#attestations).
+
+### Stamp folding and map folding: `stamp-folding-{n}` and `map-folding-{m}-{n}`
+
+Formal statements are in [`formal/LeapsInBounds/Statements/Folding.lean`](../formal/LeapsInBounds/Statements/Folding.lean). A folding of an `m × n` map, with its cells labeled, is counted by its final stack: the order of the cells from the bottom up. The creases between rows `i` and `i + 1` all end up on one edge of the stack, and those for the next `i` on the opposite edge, and the same for columns. Each crease joins the levels of its two cells, and a stack is a folding exactly when no two creases on the same edge cross: their intervals of levels are nested or disjoint. A strip of `n` stamps is the `1 × n` map.
+
+- `LowerBound m n N` means there are at least `N` foldings of the `m × n` map.
+- `UpperBound m n N` means there are at most `N`.
+- `StampLowerBound n N` and `StampUpperBound n N` are the same for the strip of `n` stamps.
+
+Witnesses can certify lower bounds only. A witness uses `format: stacks`: `N` distinct stacks, separated by whitespace, each a folding written as its cells from the bottom up, with the cells numbered from `0` row by row: one character each in base 36, or, for maps of more than 36 cells, decimal numbers separated by commas (such as `0,1,2,...,44`). For example, `'012 021 102 120 201 210'` for the 6 foldings of 3 stamps. Since the witness lists the foldings, the [size limit](#size-limit) allows counts up to a few hundred thousand: with the stacks sorted, xz compresses them to under a byte each.
+
+### Covering a disk with disks: `disk-covering-{n}`
+
+Formal statements are in [`formal/LeapsInBounds/Statements/DiskCovering.lean`](../formal/LeapsInBounds/Statements/DiskCovering.lean):
+
+- `RadicalLowerBound n terms d` means `r(n) >= radical terms d`: no `n` closed disks of smaller radius cover the closed unit disk.
+- `RadicalUpperBound n terms d` means `r(n) <= radical terms d`: some `n` closed disks of that radius cover it.
+
+Values are written as for [circle packing](#packing-unit-circles-in-an-equilateral-triangle-circle-in-equilateral-n), and can also be decimals, such as `'0.6094'` (quoted, so that it's read as text).
+
+Witnesses can certify upper bounds only. A witness for `r(n) <= v` uses `format: points`: the `n` centers, one per line as `x, y`, with rational coordinates written as integers, decimals or `\frac{a}{b}`. The radius must have a rational square. The checker covers the square `[-1, 1]²` with smaller and smaller squares, until each one misses the unit disk or lies in one of the disks, all with exact rational arithmetic. This finishes when the disks cover the unit disk with some room to spare, but not when they cover it only just, as optimal coverings do at the points where three boundaries meet. So a witness can only certify a radius slightly above the optimum of its configuration: round the radius up, in the sixth or seventh decimal place.
+
+### The de Bruijn–Newman constant: `debruijn-newman`
+
+Formal statements are in [`formal/LeapsInBounds/Statements/DeBruijnNewman.lean`](../formal/LeapsInBounds/Statements/DeBruijnNewman.lean), in terms of the zeros of `H(t, z)`:
+
+- `RadicalLowerBound terms d` means `Λ >= radical terms d`: for every `t` below it, `H(t, ·)` has a zero that isn't real.
+- `RadicalUpperBound terms d` means `Λ <= radical terms d`: for every `t` at least it, every zero of `H(t, ·)` is real.
+
+Values are written as for disk covering, such as `'0.2'` or `-50`. Only Lean proofs are accepted, here or attested.
+
+### The Tammes problem: `tammes-{n}`
+
+Formal statements are in [`formal/LeapsInBounds/Statements/Tammes.lean`](../formal/LeapsInBounds/Statements/Tammes.lean), with angles in degrees:
+
+- `RadicalLowerBound n terms d` means `T(n) >= radical terms d`: some `n` points on the unit sphere are each at least that many degrees apart.
+- `RadicalUpperBound n terms d` means `T(n) <= radical terms d`: no `n` points on the unit sphere are each further apart.
+
+Values are written as for disk covering, such as `'57.13670307'` or `90`.
+
+Witnesses can certify lower bounds only, at a rational number of degrees. A witness for `T(n) >= a` uses `format: vectors`: `n` nonzero vectors in `ℝ³`, one per line as `x, y, z`, with rational coordinates written as integers, decimals or fractions `a/b`. They needn't have unit length: the points are the vectors scaled to it. The checker compares the cosine of the angle between each two vectors, exactly, with rational bounds on `cos(a°)` from interval arithmetic. That decides every pair unless the angle is exactly `a` and `cos(a°)` is irrational, which happens for an optimal configuration whose angle is the bound. So, except at `60`, `90`, `120` and `180` degrees, where `cos(a°)` is rational, round the angle down a little, in the eighth decimal place, say.
+
+### The moving sofa constant: `moving-sofa`
+
+Formal statements are in [`formal/LeapsInBounds/Statements/MovingSofa.lean`](../formal/LeapsInBounds/Statements/MovingSofa.lean):
+
+- `RadicalLowerBound terms d` means the constant is at least `radical terms d`: some connected shape of at least that area moves around the corner of the hallway of width 1, by a continuous family of rotations and translations.
+- `RadicalUpperBound terms d` means it's at most `radical terms d`: every such shape has at most that area.
+
+Values are written as for disk covering, such as `'2.37'`. Only Lean proofs are accepted, here or attested.
+
 ## Checking locally
 
 To run the checkers on certificates, give their IDs:
@@ -375,7 +473,29 @@ Lean proofs need [elan](https://github.com/leanprover/elan) and Mathlib (`cd for
 python scripts/check_certificates.py --allow-pending --new certificates/<family>/<file>.yml
 ```
 
+## Blocked bounds
+
+[`blocked.yml`](blocked.yml) lists current bounds that can't be certified yet, and why, so that the same dead ends aren't tried again:
+
+```yaml
+- constants: [kissing-number-17, kissing-number-18]
+  bound: lower
+  reason: needs-format
+  checked: 2026-10-30
+  detail: The records use irrational coordinates, and witnesses must have integer coordinates.
+```
+
+The reason is one of:
+
+- `unpublished`: the construction or proof isn't public, or couldn't be found in the paper, its ancillary files or the authors' repositories.
+- `too-large`: the evidence is over the [size limit](#size-limit) even compressed, and there's no stable link to [attest](#attestations) it with.
+- `needs-format`: the family's checker can't read this kind of witness or value yet (see [Known gaps](#known-gaps)). A change to the checker would unblock it, in a pull request of its own.
+- `too-slow`: checking it here takes too long, and no one has attested it.
+- `out-of-reach`: a Lean proof would need formalization or computation beyond what's practical for now.
+
+The bounds are marked with their reason in [`unverified_bounds.json`](https://leapsinbounds.org/data/unverified_bounds.json). If a bound improves after it was `checked`, it's marked as stale, since the new bound may come with a witness. The build warns about entries for bounds that have since been verified, which can be removed. A search that fell short of a record isn't a blocked bound: record it in the [search notes](../notes/README.md) instead.
+
 ## Known gaps
 
-- Values are integers or sums of rational multiples of square roots for now. Other real values, such as most known square packings and disk coverings, will need more general exact arithmetic (such as nested square roots or roots of polynomials), or interval arithmetic for bounds that aren't tight.
+- Values are integers, decimals or sums of rational multiples of square roots for now. Other real values, such as most known square packings and disk coverings, will need more general exact arithmetic (such as nested square roots or roots of polynomials). Disk covering witnesses are checked with rational arithmetic, so they can only certify radii slightly above an optimal covering's, not the optimum itself.
 - Kissing number witnesses must have integer coordinates (up to scaling). Some record configurations, such as those in dimensions 17 to 21, need irrational coordinates, so they can't be submitted yet.
